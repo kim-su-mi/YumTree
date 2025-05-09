@@ -1,7 +1,5 @@
-package com.ssafy.yumTree.controller;
+package com.ssafy.yumTree.community;
 
-import com.ssafy.yumTree.model.dto.ReviewDto;
-import com.ssafy.yumTree.model.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

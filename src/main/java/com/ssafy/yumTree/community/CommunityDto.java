@@ -1,4 +1,4 @@
-package com.ssafy.yumTree.model.dto;
+package com.ssafy.yumTree.community;
 
 import java.util.Date;
 

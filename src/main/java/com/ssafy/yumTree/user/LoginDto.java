@@ -1,4 +1,4 @@
-package com.ssafy.yumTree.model.dto;
+package com.ssafy.yumTree.user;
 
 import lombok.Getter;
 import lombok.Setter;

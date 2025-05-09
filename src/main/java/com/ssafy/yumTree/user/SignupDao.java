@@ -1,6 +1,5 @@
-package com.ssafy.yumTree.model.dao;
+package com.ssafy.yumTree.user;
 
-import com.ssafy.yumTree.model.dto.UserDto;
 
 public interface SignupDao {
 	void insertUser(UserDto dto);

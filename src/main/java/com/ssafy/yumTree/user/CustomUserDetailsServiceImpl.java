@@ -1,13 +1,9 @@
-package com.ssafy.yumTree.model.service;
+package com.ssafy.yumTree.user;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import com.ssafy.yumTree.model.dao.SignupDao;
-import com.ssafy.yumTree.model.dto.CustomUserDetails;
-import com.ssafy.yumTree.model.dto.UserDto;
 
 @Service
 public class CustomUserDetailsServiceImpl implements UserDetailsService {

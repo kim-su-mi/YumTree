@@ -1,6 +1,5 @@
-package com.ssafy.yumTree.model.dao;
+package com.ssafy.yumTree.quiz;
 
-import com.ssafy.yumTree.model.dto.GameroomDto;
 
 import java.util.List;
 

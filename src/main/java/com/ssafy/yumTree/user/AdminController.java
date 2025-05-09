@@ -1,4 +1,4 @@
-package com.ssafy.yumTree.controller;
+package com.ssafy.yumTree.user;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

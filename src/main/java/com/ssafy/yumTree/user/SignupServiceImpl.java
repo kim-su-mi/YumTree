@@ -1,11 +1,8 @@
-package com.ssafy.yumTree.model.service;
+package com.ssafy.yumTree.user;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.ssafy.yumTree.model.dao.SignupDao;
-import com.ssafy.yumTree.model.dto.LoginDto;
-import com.ssafy.yumTree.model.dto.UserDto;
 
 @Service
 public class SignupServiceImpl implements SignupService {

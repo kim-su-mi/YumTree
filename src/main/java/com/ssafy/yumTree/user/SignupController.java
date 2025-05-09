@@ -1,11 +1,9 @@
-package com.ssafy.yumTree.controller;
+package com.ssafy.yumTree.user;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ssafy.yumTree.model.dto.UserDto;
-import com.ssafy.yumTree.model.service.SignupService;
 
 @RestController
 public class SignupController {

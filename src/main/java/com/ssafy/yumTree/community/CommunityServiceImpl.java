@@ -1,10 +1,8 @@
-package com.ssafy.yumTree.model.service;
-
-import com.ssafy.yumTree.model.dao.CommunityDao;
-import com.ssafy.yumTree.model.dto.CommunityDto;
-import org.springframework.stereotype.Service;
+package com.ssafy.yumTree.community;
 
 import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class CommunityServiceImpl implements CommunityService {

@@ -1,7 +1,5 @@
-package com.ssafy.yumTree.model.dao;
+package com.ssafy.yumTree.community;
 
-import com.ssafy.yumTree.model.dto.CommunityDto;
-import com.ssafy.yumTree.model.dto.ReviewDto;
 
 import java.util.List;
 

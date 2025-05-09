@@ -1,7 +1,6 @@
-package com.ssafy.yumTree.model.service;
+package com.ssafy.yumTree.community;
 
-import com.ssafy.yumTree.model.dao.ReviewDao;
-import com.ssafy.yumTree.model.dto.ReviewDto;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
