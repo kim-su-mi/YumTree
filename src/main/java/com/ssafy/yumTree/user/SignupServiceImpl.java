@@ -34,9 +34,9 @@ public class SignupServiceImpl implements SignupService {
 
 //        user.setUserRole("ROLE_ADMIN");
         userDto.setUserPw(bCryptPasswordEncoder.encode(userDto.getUserPw()));
-        userDto.setUserRole("ROLE_ADMIN");
+        userDto.setUserRole("ROLE_USER");
 
-        System.out.println(userDto);
+        System.out.println("1 : "+userDto);
         
         
         signupDao.insertUser(userDto);

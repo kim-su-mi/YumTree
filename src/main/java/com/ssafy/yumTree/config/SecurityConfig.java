@@ -1,5 +1,6 @@
 package com.ssafy.yumTree.config;
 
+import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,66 +12,93 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.ssafy.yumTree.jwt.JWTFilter;
+import com.ssafy.yumTree.jwt.JWTUtil;
 import com.ssafy.yumTree.jwt.LoginFilter;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
-	// AuthenticationManager가 인자로 받을 AuthenticationConfiguration객체 생성자 주입 
+
+	// AuthenticationManager가 인자로 받을 AuthenticationConfiguration객체 생성자 주입
 	private final AuthenticationConfiguration authenticationConfiguration;
-	
-	public SecurityConfig(AuthenticationConfiguration authenticationConfiguration) {
+	// JWTUtil 주입
+	private final JWTUtil jwtUtil;
+
+	public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
 		this.authenticationConfiguration = authenticationConfiguration;
+		this.jwtUtil = jwtUtil;
 	}
-	
-	// 비밀번호 암호화 설정 
+
+	// 비밀번호 암호화 설정
 	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
-	//AuthenticationManager를 빈으로 등
+
+	// AuthenticationManager를 빈으로 등
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 		return configuration.getAuthenticationManager();
 	}
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-				//csrf disable
-        http
-                .csrf((auth) -> auth.disable());
+		// cors설정 
+		http.cors((corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
 
-				//From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
+			@Override
+			public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
 
-				//http basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
+				CorsConfiguration configuration = new CorsConfiguration();
 
-				//경로별 인가 작업
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/signup").permitAll() 
-						.requestMatchers("/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+				configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); //프론트 엔드 서버 주
+				configuration.setAllowedMethods(Collections.singletonList("*")); //허용 메서드 
+				configuration.setAllowCredentials(true);
+				configuration.setAllowedHeaders(Collections.singletonList("*"));
+				configuration.setMaxAge(3600L);
+
+				configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+
+				return configuration;
+			}
+		})));
+
+		// csrf disable
+		http.csrf((auth) -> auth.disable());
+
+		// From 로그인 방식 disable
+		http.formLogin((auth) -> auth.disable());
+
+		// http basic 인증 방식 disable
+		http.httpBasic((auth) -> auth.disable());
+
+		// 경로별 인가 작업
+		http.authorizeHttpRequests((auth) -> auth
+				.requestMatchers("/login", "/", "/signup").permitAll()
+				.requestMatchers("/admin").hasRole("ADMIN")
+				.requestMatchers("/reissue").permitAll()
+				.anyRequest().authenticated()
 //        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
-                        );
-        // 필터 추가 LoginFilter()는 인자를 받음 (authenticationManager메소드에 authenticationConfiguration객체를 인자로 넣어야함) 
-        http
-        		.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+		);
+		// JWTFilter 등록
+		http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
 
-				//세션 설정
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+		// 필터 추가 LoginFilter()는 인자를 받음 (authenticationManager메소드에
+		// authenticationConfiguration객체를 인자로 넣어야함)
+		http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
+				UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
-    
+		// 세션 설정
+		http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+		return http.build();
+	}
 
 }

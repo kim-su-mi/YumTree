@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.ssafy.yumTree.model.dao.ReviewDao">
+<mapper namespace="com.ssafy.yumTree.community.ReviewDao">
 
     <insert id="insert" parameterType="ReviewDto" useGeneratedKeys="true" keyProperty="rvNumber">
         INSERT INTO review (rv_cm_number, rv_content, rv_user_number)
