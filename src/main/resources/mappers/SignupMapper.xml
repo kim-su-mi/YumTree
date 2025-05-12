@@ -1,18 +1,24 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.ssafy.yumTree.model.dao.SignupDao">
-<insert id="insertUser" parameterType="UserDto">
-	INSERT INTO user(user_id,user_pw,user_name,user_gender,user_birth,user_disease_number,user_role)
-	VALUES (#{userId},#{userPw},#{userName},#{userGender},#{userBirth},#{userDiseaseNumber},#{userRole})
-</insert>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.yumTree.user.SignupDao">
 
-<select id="existsByUserId" parameterType="String">
-SELECT count(*) from user where user_id LIKE (#{userId})
+	<!-- 회원 가입  -->
+	<insert id="insertUser" parameterType="UserDto">
+		INSERT INTO
+		user(user_id,user_pw,user_name,user_gender,user_birth,user_disease_number,user_role)
+		VALUES
+		(#{userId},#{userPw},#{userName},#{userGender},#{userBirth},#{userDiseaseNumber},#{userRole})
+	</insert>
+	
+	<!--해당 아이디가 이미 존재하는지  -->
+	<select id="existsByUserId" parameterType="String">
+		SELECT count(*) from user where user_id LIKE (#{userId})
 
-</select>
+	</select>
+	<!-- 로그인시 해당 회원이 회원 가입한 회원인지 확인   -->
+	<select id="findByUserName" parameterType="String">
+		select * from user WHERE user_id LIKE (#{userId})
+	</select>
 
 
-   
 </mapper>

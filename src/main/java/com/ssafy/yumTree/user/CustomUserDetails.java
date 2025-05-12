@@ -1,5 +1,6 @@
 package com.ssafy.yumTree.user;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -12,23 +13,70 @@ public class CustomUserDetails implements UserDetails{
 		this.userDto = userDto;
 	}
 
+	/**
+	 * Role값 반환 
+	 */
 	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public Collection<? extends GrantedAuthority> getAuthorities() {
 
-	@Override
-	public String getPassword() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        Collection<GrantedAuthority> collection = new ArrayList<>();
 
-	@Override
-	public String getUsername() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        collection.add(new GrantedAuthority() {
+
+            @Override
+            public String getAuthority() {
+
+                return userDto.getUserRole();
+            }
+        });
+
+        return collection;
+    }
+
+	/**
+	 * PW값 반환 
+	 */
+    @Override
+    public String getPassword() {
+
+        return userDto.getUserPw();
+    }
+
+    /**
+     *Id값 반환 
+     */
+    @Override
+    public String getUsername() {
+
+        return userDto.getUserId();
+    }
+
+    /**
+     * 계정이 만료 되었는지 
+     */
+    @Override
+    public boolean isAccountNonExpired() {
+
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+
+        return true;
+    }
 	
 
 

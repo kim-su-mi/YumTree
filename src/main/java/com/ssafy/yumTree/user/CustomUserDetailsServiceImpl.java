@@ -15,9 +15,9 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
 	
 
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
 		// 디비에서 해당 이름을 가진 사용자 조
-		UserDto user = signupDao.findByUserName(username);
+		UserDto user = signupDao.findByUserName(userId);
 		
 		//UserDetails에 담아서 return 하면 AuthenticationManager가 검증 
 		if(user != null) {
