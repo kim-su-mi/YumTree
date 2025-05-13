@@ -1,5 +1,7 @@
 package com.ssafy.yumTree.user;
 
+import java.util.Date;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public class ReissueServiceImpl implements ReissueService {
 
 	private final JWTUtil jwtUtil;
+	private final RefreshDao refreshDao;
 
-    public ReissueServiceImpl(JWTUtil jwtUtil) {
+    public ReissueServiceImpl(JWTUtil jwtUtil,RefreshDao refreshDao) {
         this.jwtUtil = jwtUtil;
+    	this.refreshDao = refreshDao;
     }
 
     @Override
@@ -57,16 +61,68 @@ public class ReissueServiceImpl implements ReissueService {
             //response status code
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
+        
+      //DB에 refresh 토큰이 저장되어 있는지 확인
+    	Boolean isExist = refreshDao.existsByRefresh(refresh);
+    	System.out.println("isExist 여부 : "+isExist);
+    	if (!isExist) {
+    		
+    		   //response body
+    		   return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+    	}
 
         String userId = jwtUtil.getUseId(refresh);
         String role = jwtUtil.getRole(refresh);
 
-        //새로운 access토큰 만듦 
+        //새로운 access토큰,refresh토큰  만듦 
         String newAccess = jwtUtil.createJwt("access", userId, role, 600000L);
-
+        String newRefresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
+        
+      //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
+    	refreshDao.deleteByRefresh(refresh);
+    	addRefreshEntity(userId, newRefresh, 86400000L);
+        
         //response헤더에 토큰 넣어서 반환 
         response.setHeader("access", newAccess);
-
+        response.addCookie(createCookie("refresh", newRefresh));
+        
         return new ResponseEntity<>(HttpStatus.OK);
     }
+    
+    /**
+     * 리프레시 토큰을 디비에 저장 
+     * @param userId
+     * @param refresh
+     * @param expiredMs
+     */
+    private void addRefreshEntity(String userId, String refresh, Long expiredMs) {
+
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshDto refreshDto = new RefreshDto();
+        refreshDto.setUserId(userId);
+        refreshDto.setRefresh(refresh);
+        refreshDto.setExpiration(date.toString());
+
+        refreshDao.insertRefreshToken(refreshDto);
+    }
+    
+    /**
+     * 쿠키 생성 
+     * @param key
+     * @param value
+     * @return
+     */
+    private Cookie createCookie(String key, String value) {
+
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24*60*60);
+        //cookie.setSecure(true);
+        //cookie.setPath("/");
+        cookie.setHttpOnly(true);
+
+        return cookie;
+    }
+    
+
 }

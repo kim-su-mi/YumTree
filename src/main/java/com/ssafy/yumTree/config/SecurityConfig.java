@@ -12,12 +12,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.ssafy.yumTree.jwt.CustomLogoutFilter;
 import com.ssafy.yumTree.jwt.JWTFilter;
 import com.ssafy.yumTree.jwt.JWTUtil;
 import com.ssafy.yumTree.jwt.LoginFilter;
+import com.ssafy.yumTree.user.RefreshDao;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -29,10 +32,13 @@ public class SecurityConfig {
 	private final AuthenticationConfiguration authenticationConfiguration;
 	// JWTUtil 주입
 	private final JWTUtil jwtUtil;
+	
+	private final RefreshDao refreshDao;
 
-	public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
+	public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,RefreshDao refreshDao) {
 		this.authenticationConfiguration = authenticationConfiguration;
 		this.jwtUtil = jwtUtil;
+		this.refreshDao = refreshDao;
 	}
 
 	// 비밀번호 암호화 설정
@@ -92,9 +98,13 @@ public class SecurityConfig {
 
 		// 필터 추가 LoginFilter()는 인자를 받음 (authenticationManager메소드에
 		// authenticationConfiguration객체를 인자로 넣어야함)
-		http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
+		http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil,refreshDao),
 				UsernamePasswordAuthenticationFilter.class);
 
+		// 커스텀한 로그아웃 필터 등록 
+		http
+        	.addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshDao), LogoutFilter.class);
+		
 		// 세션 설정
 		http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

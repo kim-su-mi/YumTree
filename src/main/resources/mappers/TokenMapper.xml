@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.yumTree.user.RefreshDao">
+
+	<!-- 해당 리프레시 토큰이 디비에 존재하는지 -->
+	<select id="existsByRefresh" parameterType="String" resultType="Boolean">
+		SELECT
+		CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+		FROM refresh_tokens
+		WHERE refresh = #{refresh};
+	</select>
+	
+	<!-- 해당 리프레시 토큰이 디비에서 삭제 -->
+	<select id="deleteByRefresh" parameterType="String">
+		DELETE FROM refresh_tokens
+		WHERE refresh = #{refresh};
+	</select>
+	
+	<!-- 해당 리프레시 토큰을 디비에 삽입 -->
+	<select id="insertRefreshToken" parameterType="RefreshDto">
+		INSERT INTO refresh_tokens (user_id, refresh, expiration)
+		VALUES (#{userId}, #{refresh}, #{expiration});
+	</select>
+
+</mapper>

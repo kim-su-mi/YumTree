@@ -1,6 +1,7 @@
 package com.ssafy.yumTree.jwt;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.ssafy.yumTree.user.RefreshDao;
+import com.ssafy.yumTree.user.RefreshDto;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -23,9 +27,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter{
 	//JWTUtil 주입
 	private final JWTUtil jwtUtil;
 	
-	public LoginFilter(AuthenticationManager authenticationManager,JWTUtil jwtUtil) {
+	private final RefreshDao refreshDao;
+	
+	public LoginFilter(AuthenticationManager authenticationManager,JWTUtil jwtUtil,RefreshDao refreshDao) {
 		this.authenticationManager = authenticationManager;
 		this.jwtUtil = jwtUtil;
+		this.refreshDao = refreshDao;
 	}
 	
 
@@ -59,6 +66,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter{
 	    String access = jwtUtil.createJwt("access", userId, role, 600000L);
 	    String refresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
 
+	  //Refresh 토큰 저장
+	    addRefreshEntity(userId, refresh, 86400000L);
+	    
 	    //응답 설정
 	    response.setHeader("access", access);
 	    response.addCookie(createCookie("refresh", refresh));
@@ -76,6 +86,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter{
 	    cookie.setHttpOnly(true);
 
 	    return cookie;
+	}
+	
+	private void addRefreshEntity(String userId, String refresh, Long expiredMs) {
+
+	    Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+	    RefreshDto refreshDto = new RefreshDto();
+	    refreshDto.setUserId(userId);
+	    refreshDto.setRefresh(refresh);
+	    refreshDto.setExpiration(date.toString());
+
+	    refreshDao.insertRefreshToken(refreshDto);
 	}
 
 
