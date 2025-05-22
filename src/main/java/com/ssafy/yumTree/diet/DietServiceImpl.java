@@ -1,22 +1,29 @@
 package com.ssafy.yumTree.diet;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartRequest;
 
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssafy.yumTree.config.ChatGPTConfig;
 import com.ssafy.yumTree.config.S3Config;
 import com.ssafy.yumTree.jwt.UserUtil;
 
@@ -26,12 +33,14 @@ import com.ssafy.yumTree.jwt.UserUtil;
 public class DietServiceImpl implements DietService{
 	private final DietDao dietDao;
 	private final UserUtil userUtil;
-	private S3Config s3Config;
+	private final S3Config s3Config;
+	private final ChatGPTConfig chatGPTConfig;
 	
-	public DietServiceImpl(DietDao dietDao,UserUtil userUtil,S3Config s3Config) {
+	public DietServiceImpl(DietDao dietDao,UserUtil userUtil,S3Config s3Config,ChatGPTConfig chatGPTConfig) {
 		this.dietDao = dietDao;
 		this.userUtil = userUtil;
 		this.s3Config = s3Config;
+		this.chatGPTConfig = chatGPTConfig;
 	}
 
 	@Override
@@ -44,9 +53,26 @@ public class DietServiceImpl implements DietService{
     private String bucket;
 	@Value("${cloud.aws.s3.url.prefix}")
 	private String prefix;
+	
+	private String promptUrl = "https://api.openai.com/v1/chat/completions";
 
-    private String localLocation = "C:\\ssafy\\img\\";
-
+	// 고정 프롬프트 설정
+	private final String FIXED_PROMPT = "이 음식 사진을 분석해서 다음 정보를 JSON 형태로 제공해주세요:\n" +
+            "1. 음식 이름\n" +
+            "2. 예상 칼로리 (kcal)\n" +
+            "3. 주요 영양성분 (단백질, 탄수화물, 지방)\n" +
+            "4. 건강도 평가 (1-10점)\n" +
+            "5. 식단 개선 제안\n\n" +
+            "다음과 같은 JSON 형식으로 답변해주세요:\n" +
+            "{\n" +
+            "  \"foodName\": \"음식이름\",\n" +
+            "  \"calories\": 숫자,\n" +
+            "  \"protein\": \"단백질g\",\n" +
+            "  \"carbohydrate\": \"탄수화물g\",\n" +
+            "  \"fat\": \"지방g\",\n" +
+            "  \"healthScore\": 숫자,\n" +
+            "  \"suggestions\": \"개선제안\"\n" +
+            "}";
 
 	@Override
 	public MonthlyDietSummaryResponseDto getMonthlySummary(String dateStr) {
@@ -153,6 +179,155 @@ public class DietServiceImpl implements DietService{
         return prefix+s3Key;
     }
 
+	
+
+	/**
+     * ChatGPT API 호출
+     */
+    @Override
+    public Map<String, Object> prompt(ChatCompletionDto chatCompletionDto) {
+        System.out.println("[+] ChatGPT API 호출을 시작합니다.");
+        
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        try {
+            // [STEP1] 토큰 정보가 포함된 Header를 가져옵니다.
+            HttpHeaders headers = chatGPTConfig.httpHeaders();
+            
+            // [STEP2] HTTP 요청 엔티티 구성
+            HttpEntity<ChatCompletionDto> requestEntity = new HttpEntity<>(chatCompletionDto, headers);
+            
+            // [STEP3] RestTemplate을 사용해서 API 호출
+            ResponseEntity<String> response = chatGPTConfig
+                    .restTemplate()
+                    .exchange(promptUrl, HttpMethod.POST, requestEntity, String.class);
+            
+            System.out.println("ChatGPT API 응답 상태: " + response.getStatusCode());
+            System.out.println("ChatGPT API 응답 본문: " + response.getBody());
+            
+            // [STEP4] String -> HashMap 역직렬화
+            ObjectMapper om = new ObjectMapper();
+            resultMap = om.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            
+            System.out.println("[+] ChatGPT API 호출이 성공적으로 완료되었습니다.");
+            
+        } catch (JsonProcessingException e) {
+            System.err.println("JSON 파싱 오류: " + e.getMessage());
+            e.printStackTrace();
+            resultMap.put("error", "JSON 파싱 중 오류가 발생했습니다: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("ChatGPT API 호출 오류: " + e.getMessage());
+            e.printStackTrace();
+            resultMap.put("error", "API 호출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        
+        return resultMap;
+    }
+    
+    /**
+     * 이미지 업로드 + AI 분석 통합 처리
+     */
+    @Override
+    public Map<String, Object> analyzeFood(MultipartFile file) throws Exception {
+    System.out.println("음식 분석 서비스 ");
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            System.out.println("[+] 음식 분석을 시작합니다.");
+            
+            // 1. 이미지를 S3에 업로드
+            String imageUrl = imageUpload(file);
+            System.out.println("이미지 업로드 완료: " + imageUrl);
+            
+            // 2. ChatGPT 요청 구성
+            ChatCompletionDto chatRequest = createChatRequest(imageUrl);
+            
+            // 3. AI 분석 요청
+            Map<String, Object> aiResponse = prompt(chatRequest);
+            
+            // 4. 오류 체크
+            if (aiResponse.containsKey("error")) {
+                throw new RuntimeException("AI 분석 중 오류 발생: " + aiResponse.get("error"));
+            }
+            
+            // 5. 결과 구성
+            result.put("imageUrl", imageUrl);
+            result.put("aiAnalysis", aiResponse);
+            
+            // AI 응답에서 실제 분석 결과 추출
+            String analysisText = extractAnalysisFromResponse(aiResponse);
+            if (analysisText != null) {
+                result.put("analysisText", analysisText);
+            }
+            
+            System.out.println("[+] 음식 분석이 성공적으로 완료되었습니다.");
+            return result;
+            
+        } catch (Exception e) {
+            System.err.println("음식 분석 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    /**
+     * ChatGPT 요청 객체 생성
+     */
+    private ChatCompletionDto createChatRequest(String imageUrl) {
+        // 컨텐츠 리스트 생성
+        List<ContentDto> contents = new ArrayList<>();
+        
+        // 텍스트 프롬프트 추가
+        ContentDto textContent = new ContentDto();
+        textContent.setType("text");
+        textContent.setText(FIXED_PROMPT);
+        contents.add(textContent);
+        
+        // 이미지 URL 추가
+        ContentDto imageContent = new ContentDto();
+        imageContent.setType("image_url");
+        ImageUrlDto imageUrlDto = new ImageUrlDto();
+        imageUrlDto.setUrl(imageUrl);
+        imageContent.setImageUrl(imageUrlDto);
+        contents.add(imageContent);
+        
+        // 메시지 생성
+        ChatRequestMsgDto message = new ChatRequestMsgDto();
+        message.setRole("user");
+        message.setContent(contents);
+        
+        // ChatGPT 요청 생성
+        ChatCompletionDto chatRequest = new ChatCompletionDto();
+        chatRequest.setModel("gpt-4-vision-preview");
+        chatRequest.setMessages(Arrays.asList(message));
+        chatRequest.setMaxTokens(1000);
+        
+        return chatRequest;
+    }
+    
+    /**
+     * AI 응답에서 실제 분석 텍스트 추출
+     */
+    private String extractAnalysisFromResponse(Map<String, Object> aiResponse) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) aiResponse.get("choices");
+            
+            if (choices != null && !choices.isEmpty()) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> firstChoice = choices.get(0);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                
+                if (message != null) {
+                    return (String) message.get("content");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("AI 응답 파싱 중 오류: " + e.getMessage());
+        }
+        return null;
+    }
 	
 	
 

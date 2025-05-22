@@ -2,6 +2,7 @@ package com.ssafy.yumTree.diet;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
@@ -12,5 +13,12 @@ public interface DietService {
 	MonthlyDietSummaryResponseDto getMonthlySummary(String date);
 
 	String imageUpload(MultipartFile file) throws IOException;
+
+	/**
+     * ChatGPT API 호출
+     */
+    Map<String, Object> prompt(ChatCompletionDto chatCompletionDto);
+
+	 Map<String, Object> analyzeFood(MultipartFile file) throws Exception;
 
 }

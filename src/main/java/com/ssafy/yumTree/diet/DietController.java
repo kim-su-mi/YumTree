@@ -73,7 +73,7 @@ public class DietController {
         try {
 
             String s3Url = dietService.imageUpload(file);
-            System.out.println("fullUrl : "+s3Url);
+//            System.out.println("fullUrl : "+s3Url);
             responseData.put("uploaded", true);
             responseData.put("url", s3Url);
 
@@ -86,5 +86,38 @@ public class DietController {
             return responseData;
         }
     }
-
+	
+	/**
+     * 이미지 업로드 + AI 분석 통합 API
+     * 프론트에서는 사진만 보내면 됨
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/analyze")
+    public ResponseEntity<Map<String, Object>> analyzeFood(@RequestParam("file") MultipartFile file) throws Exception {
+        Map<String, Object> responseData = new HashMap<>();
+        System.out.println("컨트롤러 ");
+        try {
+            if (file == null || file.isEmpty()) {
+                responseData.put("success", false);
+                responseData.put("error", "파일이 없습니다.");
+                return ResponseEntity.badRequest().body(responseData);
+            }
+            
+            // 통합 분석 서비스 호출 (이미지 업로드 + AI 분석)
+            Map<String, Object> result = dietService.analyzeFood(file);
+            
+            responseData.put("success", true);
+            responseData.putAll(result); // 서비스에서 반환한 결과를 모두 포함
+            
+            return ResponseEntity.ok(responseData);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.put("success", false);
+            responseData.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(responseData);
+        }
+    }
 }
