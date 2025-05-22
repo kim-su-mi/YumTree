@@ -87,11 +87,11 @@ public class SecurityConfig {
 
 		// 경로별 인가 작업
 		http.authorizeHttpRequests((auth) -> auth
-				.requestMatchers("/login", "/", "/signup","/community").permitAll()
-				.requestMatchers("/admin").hasRole("ADMIN")
-				.requestMatchers("reissue").permitAll()
-				.anyRequest().authenticated()
-//        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
+//				.requestMatchers("/login", "/", "/signup","/community").permitAll()
+//				.requestMatchers("/admin").hasRole("ADMIN")
+//				.requestMatchers("reissue").permitAll()
+//				.anyRequest().authenticated()
+        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
 		);
 		// JWTFilter 등록
 		http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);

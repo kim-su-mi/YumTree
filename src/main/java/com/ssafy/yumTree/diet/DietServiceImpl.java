@@ -1,16 +1,26 @@
 package com.ssafy.yumTree.diet;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.ssafy.yumTree.config.S3Config;
 import com.ssafy.yumTree.jwt.UserUtil;
+
+
 
 @Service
 public class DietServiceImpl implements DietService{
@@ -29,6 +39,13 @@ public class DietServiceImpl implements DietService{
 		
 		return dietDao.insertFood(foodDto);
 	}
+	
+	@Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+	@Value("${cloud.aws.s3.url.prefix}")
+	private String prefix;
+
+    private String localLocation = "C:\\ssafy\\img\\";
 
 
 	@Override
@@ -87,10 +104,54 @@ public class DietServiceImpl implements DietService{
 	 *s3에 이미지 저장 
 	 */
 	@Override
-	public String imageUpload(MultipartRequest request) {
-		
-		return null;
-	}
+//	public String imageUpload(MultipartRequest request) throws IOException {
+//		// request에서 이미지 파일을 뽑아냄 
+//		MultipartFile file = request.getFile("upload");
+//
+//		// 뽑아낸 이미지 파일에서 이름 및 확장자 추출 
+//        String fileName = file.getOriginalFilename();
+//        String ext = fileName.substring(fileName.indexOf("."));
+//
+//        // 이미지 파일 이름 유일성을 위해 uuid적용 
+//        String uuidFileName = UUID.randomUUID() + ext;
+//        
+//        //서버환경에 저장할 경로 생성 
+//        String localPath = localLocation + uuidFileName;
+//
+//        //서버환경에 이미지 파일 저장 
+//        File localFile = new File(localPath);
+//        file.transferTo(localFile);
+//
+//
+//        // s3에 이미지 저장 
+//        s3Config.amazonS3Client().putObject(new PutObjectRequest(bucket, uuidFileName, localFile).withCannedAcl(CannedAccessControlList.PublicRead));
+//        // 이미지가 올라간 s3의 주소 
+//        String s3Url = s3Config.amazonS3Client().getUrl(bucket, uuidFileName).toString();
+//       System.out.println("s3  : "+s3Url);
+//        
+//        //서버에 저장한 이미지 삭제 
+//        localFile.delete();
+//
+//        return s3Url;
+//	}
+	
+	public String imageUpload(MultipartFile file) throws IOException {
+        // 파일명 생성
+        String originalFileName = file.getOriginalFilename();
+        String ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String s3Key = UUID.randomUUID() + ext;
+        
+        // 직접 S3에 업로드 (로컬 저장 없이)
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(file.getContentType());
+        metadata.setContentLength(file.getSize());
+        
+        s3Config.amazonS3Client().putObject(new PutObjectRequest(bucket, s3Key, file.getInputStream(), metadata)
+                .withCannedAcl(CannedAccessControlList.PublicRead));
+        
+        // S3 키만 반환 (전체 URL 대신)
+        return prefix+s3Key;
+    }
 
 	
 	
