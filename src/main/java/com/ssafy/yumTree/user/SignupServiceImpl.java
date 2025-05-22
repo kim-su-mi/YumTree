@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SignupServiceImpl implements SignupService {
-	private final SignupDao signupDao;
+	private final UserDao userDao;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public SignupServiceImpl(SignupDao signupDao, BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.signupDao = signupDao;
+    public SignupServiceImpl(UserDao signupDao, BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.userDao = signupDao;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
@@ -20,7 +20,7 @@ public class SignupServiceImpl implements SignupService {
         String userId = userDto.getUserId();
 
         System.out.println(111111111);
-        int isExist = signupDao.existsByUserId(userId);
+        int isExist = userDao.existsByUserId(userId);
         System.out.println(222222222);
 
         if (isExist > 0) {
@@ -44,7 +44,7 @@ public class SignupServiceImpl implements SignupService {
         System.out.println(userDto);
         
         
-        signupDao.insertUser(userDto);
+        userDao.insertUser(userDto);
     }
     
     // 권장 칼로리 계산

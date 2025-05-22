@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.yumTree.diet.DietDao">
+<insert id="insertFood" parameterType="FoodDto">
+INSERT INTO food (food_name, food_kcal, food_carbs, food_protein, food_fat, food_sodium, food_cholesterol, food_weight)
+VALUES (#{foodName},#{foodKacl},#{foodCarbs},#{foodProtein},#{foodFat},#{foodSodium},#{foodCholesterol},#{foodWeight})
+</insert>
+
+<!--<select id="getDietSummaryByMonth" parameterType="Map" resultType=""></select>-->
+
+</mapper>

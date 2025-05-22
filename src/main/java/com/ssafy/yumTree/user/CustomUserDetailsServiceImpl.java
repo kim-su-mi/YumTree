@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CustomUserDetailsServiceImpl implements UserDetailsService {
-	private final SignupDao signupDao;
+	private final UserDao signupDao;
 	
-	public CustomUserDetailsServiceImpl(SignupDao signupDao) {
+	public CustomUserDetailsServiceImpl(UserDao signupDao) {
 		this.signupDao = signupDao;
 	}
 	

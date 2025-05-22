@@ -38,7 +38,12 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
         //url이 로그아웃 경로인지 아닌지 검증 
         String requestUri = request.getRequestURI();
-        if (!requestUri.matches("^\\/logout$")) {
+        
+     // context-path를 제거한 실제 경로 체크
+        String contextPath = request.getContextPath(); // "/yumTree"
+        String path = requestUri.substring(contextPath.length()); // "/logout"
+        
+        if (!path.matches("^\\/logout$")) {
 
             filterChain.doFilter(request, response);
             return;
@@ -63,13 +68,14 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
         //refresh 토큰이 null인지 체크 
         if (refresh == null) {
-
+        	System.out.println("토큰 null");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
+        System.out.println("토큰 null x ");
         //refresh 토큰 만료 여부 체크 
         try {
+        	System.out.println("토큰 만료 ");
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
         	// 만료 되었다는 건 이미 로그아웃 되었다는 의미
@@ -77,7 +83,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
+        System.out.println("토큰 만x");
         // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
         String category = jwtUtil.getCategory(refresh);
         if (!category.equals("refresh")) {
@@ -88,23 +94,28 @@ public class CustomLogoutFilter extends GenericFilterBean {
         }
 
         //DB에 저장되어 있는지 확인
+        System.out.println(refresh);
         Boolean isExist = refreshDao.existsByRefresh(refresh);
         if (!isExist) {
-
+        	System.out.println("토큰 디비에 없음 ");
             //response status code
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
+        System.out.println("토큰 디비에 있음  ");
+        
         //로그아웃 진행
         //Refresh 토큰 DB에서 제거
         refreshDao.deleteByRefresh(refresh);
+        System.out.println("토큰 디비에서제거 완료  ");
 
         //Refresh 토큰 Cookie 값 0
         Cookie cookie = new Cookie("refresh", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
 
+        System.out.println("쿠키 셋팅 ");
+        
         response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);
     }
