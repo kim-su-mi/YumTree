@@ -87,9 +87,9 @@ public class SecurityConfig {
 
 		// 경로별 인가 작업
 		http.authorizeHttpRequests((auth) -> auth
-				.requestMatchers("/login", "/", "/signup").permitAll()
+				.requestMatchers("/login", "/", "/signup","/community").permitAll()
 				.requestMatchers("/admin").hasRole("ADMIN")
-				.requestMatchers("/reissue").permitAll()
+				.requestMatchers("reissue").permitAll()
 				.anyRequest().authenticated()
 //        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
 		);
