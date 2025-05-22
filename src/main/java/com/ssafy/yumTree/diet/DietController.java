@@ -1,6 +1,5 @@
 package com.ssafy.yumTree.diet;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,9 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 
 import com.ssafy.yumTree.jwt.UserUtil;
+
+import io.jsonwebtoken.io.IOException;
 
 @RestController
 @RequestMapping("/diet")
@@ -21,6 +23,7 @@ public class DietController {
 	private final DietService dietService;
 	
 	private UserUtil userUtil;
+	
 	
 	public DietController(DietService dietService,UserUtil userUtil) {
 		this.dietService = dietService;
@@ -55,31 +58,33 @@ public class DietController {
 	
 	/**
 	 *s3에 이미지 저장 
+	 *프론트에서 file이라고 넘겨줘야
 	 * @param request
 	 * @return
+	 * @throws Exception 
+	 * @throws java.io.IOException 
 	 * @throws Exception
 	 */
 	@PostMapping("/image")
-	public Map<String, Object> imageUpload(MultipartRequest request) throws Exception {
+	public Map<String, Object> imageUpload(MultipartFile file) throws Exception{
 
-//        Map<String, Object> responseData = new HashMap<>();
-//
-//        try {
-//
-//            String s3Url = dietService.imageUpload(request);
-//
-//            responseData.put("uploaded", true);
-//            responseData.put("url", s3Url);
-//
-//            return responseData;
-//
-//        } catch (IOException e) {
-//
-//            responseData.put("uploaded", false);
-//
-//            return responseData;
-//        }
-		return null;
+        Map<String, Object> responseData = new HashMap<>();
+
+        try {
+
+            String s3Url = dietService.imageUpload(file);
+            System.out.println("fullUrl : "+s3Url);
+            responseData.put("uploaded", true);
+            responseData.put("url", s3Url);
+
+            return responseData;
+
+        } catch (IOException e) {
+
+            responseData.put("uploaded", false);
+
+            return responseData;
+        }
     }
 
 }
