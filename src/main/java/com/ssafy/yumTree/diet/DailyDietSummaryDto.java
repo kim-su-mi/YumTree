@@ -33,6 +33,48 @@ public class DailyDietSummaryDto {
 				+ ", hasDinner=" + hasDinner + ", hasSnack=" + hasSnack + "]";
 	}
 
+	public String getDate() {
+		return date;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public boolean isHasBreakfast() {
+		return hasBreakfast;
+	}
+
+	public void setHasBreakfast(boolean hasBreakfast) {
+		this.hasBreakfast = hasBreakfast;
+	}
+
+	public boolean isHasLunch() {
+		return hasLunch;
+	}
+
+	public void setHasLunch(boolean hasLunch) {
+		this.hasLunch = hasLunch;
+	}
+
+	public boolean isHasDinner() {
+		return hasDinner;
+	}
+
+	public void setHasDinner(boolean hasDinner) {
+		this.hasDinner = hasDinner;
+	}
+
+	public boolean isHasSnack() {
+		return hasSnack;
+	}
+
+	public void setHasSnack(boolean hasSnack) {
+		this.hasSnack = hasSnack;
+	}
+	
+	
+
     
     
 

@@ -26,6 +26,25 @@ public class MonthlyDietSummaryResponseDto {
 		return "MonthlyDietSummaryResponseDto [date=" + date + ", dailySummaries=" + dailySummaries + "]";
 	}
 
+	public String getDate() {
+		return date;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public List<DailyDietSummaryDto> getDailySummaries() {
+		return dailySummaries;
+	}
+
+	public void setDailySummaries(List<DailyDietSummaryDto> dailySummaries) {
+		this.dailySummaries = dailySummaries;
+	}
+	
+	
+
+	
     
     
 

@@ -225,25 +225,62 @@ public class DietServiceImpl implements DietService{
     }
     
     /**
-     * 이미지 업로드 + AI 분석 통합 처리
+     * ChatGPT API 호출 (Map 버전)
+     */
+    public Map<String, Object> promptWithMap(Map<String, Object> requestMap) {
+        System.out.println("[+] ChatGPT API 호출을 시작합니다.");
+        
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        try {
+            // 헤더 설정
+            HttpHeaders headers = chatGPTConfig.httpHeaders();
+            
+            // HTTP 요청 엔티티 구성
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestMap, headers);
+            
+            // API 호출
+            ResponseEntity<String> response = chatGPTConfig
+                    .restTemplate()
+                    .exchange(promptUrl, HttpMethod.POST, requestEntity, String.class);
+            
+            System.out.println("ChatGPT API 응답 상태: " + response.getStatusCode());
+            System.out.println("ChatGPT API 응답 본문: " + response.getBody());
+            
+            // JSON 파싱
+            ObjectMapper om = new ObjectMapper();
+            resultMap = om.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            
+            System.out.println("[+] ChatGPT API 호출이 성공적으로 완료되었습니다.");
+            
+        } catch (Exception e) {
+            System.err.println("ChatGPT API 호출 오류: " + e.getMessage());
+            e.printStackTrace();
+            resultMap.put("error", "API 호출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        
+        return resultMap;
+    }
+    
+    /**
+     * 이미지 업로드 + AI 분석 통합 처리 (Map 버전)
      */
     @Override
     public Map<String, Object> analyzeFood(MultipartFile file) throws Exception {
-    System.out.println("음식 분석 서비스 ");
         Map<String, Object> result = new HashMap<>();
         
         try {
             System.out.println("[+] 음식 분석을 시작합니다.");
             
-            // 1. 이미지를 S3에 업로드
+            // 1. 이미지 업로드
             String imageUrl = imageUpload(file);
             System.out.println("이미지 업로드 완료: " + imageUrl);
             
-            // 2. ChatGPT 요청 구성
-            ChatCompletionDto chatRequest = createChatRequest(imageUrl);
+            // 2. ChatGPT 요청 구성 (Map 사용)
+            Map<String, Object> chatRequestMap = createChatRequestMap(imageUrl);
             
-            // 3. AI 분석 요청
-            Map<String, Object> aiResponse = prompt(chatRequest);
+            // 3. AI 분석 요청 (Map 버전 사용)
+            Map<String, Object> aiResponse = promptWithMap(chatRequestMap);
             
             // 4. 오류 체크
             if (aiResponse.containsKey("error")) {
@@ -271,39 +308,53 @@ public class DietServiceImpl implements DietService{
     }
     
     /**
-     * ChatGPT 요청 객체 생성
+     * ChatGPT 요청 객체 생성 (Map 사용)
      */
-    private ChatCompletionDto createChatRequest(String imageUrl) {
-        // 컨텐츠 리스트 생성
-        List<ContentDto> contents = new ArrayList<>();
+    private Map<String, Object> createChatRequestMap(String imageUrl) {
+        System.out.println("ChatGPT 요청 생성 중 - 이미지 URL: " + imageUrl);
         
-        // 텍스트 프롬프트 추가
-        ContentDto textContent = new ContentDto();
-        textContent.setType("text");
-        textContent.setText(FIXED_PROMPT);
-        contents.add(textContent);
-        
-        // 이미지 URL 추가
-        ContentDto imageContent = new ContentDto();
-        imageContent.setType("image_url");
-        ImageUrlDto imageUrlDto = new ImageUrlDto();
-        imageUrlDto.setUrl(imageUrl);
-        imageContent.setImageUrl(imageUrlDto);
-        contents.add(imageContent);
-        
-        // 메시지 생성
-        ChatRequestMsgDto message = new ChatRequestMsgDto();
-        message.setRole("user");
-        message.setContent(contents);
-        
-        // ChatGPT 요청 생성
-        ChatCompletionDto chatRequest = new ChatCompletionDto();
-        chatRequest.setModel("gpt-4-vision-preview");
-        chatRequest.setMessages(Arrays.asList(message));
-        chatRequest.setMaxTokens(1000);
-        
-        return chatRequest;
+        try {
+            // 텍스트 컨텐츠
+            Map<String, Object> textContent = new HashMap<>();
+            textContent.put("type", "text");
+            textContent.put("text", FIXED_PROMPT);
+            
+            // 이미지 URL 컨텐츠
+            Map<String, Object> imageUrlMap = new HashMap<>();
+            imageUrlMap.put("url", imageUrl);
+            
+            Map<String, Object> imageContent = new HashMap<>();
+            imageContent.put("type", "image_url");
+            imageContent.put("image_url", imageUrlMap);
+            
+            // 컨텐츠 리스트
+            List<Map<String, Object>> contents = Arrays.asList(textContent, imageContent);
+            
+            // 메시지
+            Map<String, Object> message = new HashMap<>();
+            message.put("role", "user");
+            message.put("content", contents);
+            
+            // 최종 요청
+            Map<String, Object> request = new HashMap<>();
+            request.put("model", "gpt-4o");
+            request.put("messages", Arrays.asList(message));
+            request.put("max_tokens", 1000);
+            
+            // 디버깅용 출력
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonString = mapper.writeValueAsString(request);
+            System.out.println("생성된 JSON: " + jsonString);
+            
+            return request;
+            
+        } catch (Exception e) {
+            System.err.println("ChatGPT 요청 생성 중 오류: " + e.getMessage());
+            throw new RuntimeException("ChatGPT 요청 생성 실패", e);
+        }
     }
+    
+    
     
     /**
      * AI 응답에서 실제 분석 텍스트 추출
