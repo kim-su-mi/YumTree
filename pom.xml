@@ -59,7 +59,8 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<version>1.18.32</version>  <!-- 최신 버전 -->
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -93,7 +94,8 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!--s3쓰기 위한 의존성 -->
-		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-aws -->
+		<!--
+		https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-aws -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-aws</artifactId>

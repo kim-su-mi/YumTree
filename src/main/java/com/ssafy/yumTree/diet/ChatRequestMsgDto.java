@@ -10,6 +10,22 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class ChatRequestMsgDto {
-    private String role;
-    private List<ContentDto> content;
+	 private String role;
+	    private List<ContentDto> content; // String이 아닌 List<ContentDto>
+    
+    
+	public String getRole() {
+		return role;
+	}
+	public void setRole(String role) {
+		this.role = role;
+	}
+	public List<ContentDto> getContent() {
+		return content;
+	}
+	public void setContent(List<ContentDto> content) {
+		this.content = content;
+	}
+    
+    
 }
