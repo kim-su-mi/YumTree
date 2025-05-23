@@ -95,9 +95,34 @@ public class DietController {
      * @throws Exception
      */
 	@PostMapping("/analyze")
+//	public ResponseEntity<Map<String, Object>> analyzeFood(MultipartFile file) throws Exception {
+//	    Map<String, Object> responseData = new HashMap<>();
+//	    System.out.println("컨트롤러 진입!");
+//	    
+//	    try {
+//	        if (file == null || file.isEmpty()) {
+//	            responseData.put("success", false);
+//	            responseData.put("error", "파일이 없습니다.");
+//	            return ResponseEntity.badRequest().body(responseData);
+//	        }
+//
+//	        // 통합 분석 서비스 호출 (이미지 업로드 + AI 분석)
+//	        Map<String, Object> result = dietService.analyzeFood(file);
+//
+//	        responseData.put("success", true);
+//	        responseData.putAll(result);
+//
+//	        return ResponseEntity.ok(responseData);
+//
+//	    } catch (Exception e) {
+//	        e.printStackTrace();
+//	        responseData.put("success", false);
+//	        responseData.put("error", e.getMessage());
+//	        return ResponseEntity.status(500).body(responseData);
+//	    }
+//	}
 	public ResponseEntity<Map<String, Object>> analyzeFood(MultipartFile file) throws Exception {
 	    Map<String, Object> responseData = new HashMap<>();
-	    System.out.println("컨트롤러 진입!");
 	    
 	    try {
 	        if (file == null || file.isEmpty()) {
@@ -105,25 +130,18 @@ public class DietController {
 	            responseData.put("error", "파일이 없습니다.");
 	            return ResponseEntity.badRequest().body(responseData);
 	        }
-
-	        // 통합 분석 서비스 호출 (이미지 업로드 + AI 분석)
+	        
+	        // 통합 분석 서비스 호출
 	        Map<String, Object> result = dietService.analyzeFood(file);
-
-	        responseData.put("success", true);
-	        responseData.putAll(result);
-
-	        return ResponseEntity.ok(responseData);
-
+	        System.out.println("#########################최종 결과#################");
+	        System.out.println(result);
+	        return ResponseEntity.ok(result);
+	        
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        responseData.put("success", false);
 	        responseData.put("error", e.getMessage());
 	        return ResponseEntity.status(500).body(responseData);
 	    }
-	}
-	@PostMapping("/simple-test")
-	public ResponseEntity<String> simpleTest() {
-	    System.out.println("간단한 POST 테스트");
-	    return ResponseEntity.ok("POST 작동");
 	}
 }

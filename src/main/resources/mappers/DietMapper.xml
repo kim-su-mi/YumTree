@@ -5,9 +5,40 @@
 <mapper namespace="com.ssafy.yumTree.diet.DietDao">
 <insert id="insertFood" parameterType="FoodDto">
 INSERT INTO food (food_name, food_kcal, food_carbs, food_protein, food_fat, food_sodium, food_cholesterol, food_weight)
-VALUES (#{foodName},#{foodKacl},#{foodCarbs},#{foodProtein},#{foodFat},#{foodSodium},#{foodCholesterol},#{foodWeight})
+VALUES (#{foodName},#{foodKcal},#{foodCarbs},#{foodProtein},#{foodFat},#{foodSodium},#{foodCholesterol},#{foodWeight})
 </insert>
 
-<!--<select id="getDietSummaryByMonth" parameterType="Map" resultType=""></select>-->
+	<!-- 음식 이름으로 검색 (완전히 일치해야함)-->
+    <select id="findFoodsByName" parameterType="String" resultType="FoodDto">
+        SELECT
+        food_id,
+        food_name,
+        food_kcal,
+        food_carbs,
+        food_protein,
+        food_fat,
+        food_sodium,
+        food_cholesterol,
+        food_weight
+    FROM food
+    WHERE food_name = #{foodName}
+    LIMIT 1
+    </select>
+    
+    <!-- ID로 음식 조회 -->
+    <select id="findFoodById" parameterType="int" resultType="FoodDto">
+        SELECT 
+            food_id as foodId,
+            food_name as foodName,
+            food_kcal as foodKcal,
+            food_carbs as foodCarbs,
+            food_protein as foodProtein,
+            food_fat as foodFat,
+            food_sodium as foodSodium,
+            food_cholesterol as foodCholesterol,
+            food_weight as foodWeight
+        FROM food 
+        WHERE food_id = #{foodId}
+    </select>
 
 </mapper>
