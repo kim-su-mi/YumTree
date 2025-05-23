@@ -22,6 +22,7 @@ public class QuizController {
      */
     @GetMapping
     public ResponseEntity<?> getAllRooms() {
+        System.out.println(1);
         return new ResponseEntity<>(quizService.getAllRooms(), HttpStatus.OK);
     }
 

@@ -50,7 +50,7 @@ public class QuizServiceImpl implements QuizService {
                 .maxParticipants(dto.getMaxParticipants())
                 .roomType(dto.getRoomType())
                 .password(dto.getPassword())
-                .hostId("user1")
+                .hostId(userUtil.getCurrentUserId())
                 .status("WAITING")
                 .currentParticipants(1)
                 .currentQuestionNumber(0)
@@ -59,7 +59,7 @@ public class QuizServiceImpl implements QuizService {
 
         Participant participant = Participant.builder()
                 .roomId(Math.toIntExact(room.getRoomId()))
-                .userId("user1")
+                .userId(userUtil.getCurrentUserId())
                 .score(0)
                 .isHost(true)
                 .isReady(false)
@@ -71,7 +71,7 @@ public class QuizServiceImpl implements QuizService {
     public void addParticipantRoom(@RequestParam("roomId") int roomId) {
         Participant participant = Participant.builder()
                 .roomId(Math.toIntExact(roomId))
-                .userId("user1")
+                .userId(userUtil.getCurrentUserId())
                 .score(0)
                 .isHost(true)
                 .isReady(false)
