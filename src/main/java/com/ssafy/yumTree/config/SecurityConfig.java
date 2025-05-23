@@ -1,5 +1,6 @@
 package com.ssafy.yumTree.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
@@ -64,13 +65,15 @@ public class SecurityConfig {
 
 				CorsConfiguration configuration = new CorsConfiguration();
 
-				configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); //프론트 엔드 서버 주
+				configuration.setAllowedOrigins(
+						Arrays.asList("http://localhost:3000", "http://localhost:5173")
+				); //프론트 엔드 서버 주
 				configuration.setAllowedMethods(Collections.singletonList("*")); //허용 메서드 
 				configuration.setAllowCredentials(true);
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
 				configuration.setMaxAge(3600L);
 
-				configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+				configuration.setExposedHeaders(Arrays.asList("Authorization", "access"));
 
 				return configuration;
 			}
@@ -87,11 +90,11 @@ public class SecurityConfig {
 
 		// 경로별 인가 작업
 		http.authorizeHttpRequests((auth) -> auth
-//				.requestMatchers("/login", "/", "/signup","/community").permitAll()
-//				.requestMatchers("/admin").hasRole("ADMIN")
-//				.requestMatchers("reissue").permitAll()
-//				.anyRequest().authenticated()
-        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
+				.requestMatchers("/login", "/", "/signup","/community").permitAll()
+				.requestMatchers("/admin").hasRole("ADMIN")
+				.requestMatchers("reissue").permitAll()
+				.anyRequest().authenticated()
+//        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
 		);
 		// JWTFilter 등록
 		http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
