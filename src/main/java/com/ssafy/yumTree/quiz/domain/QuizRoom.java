@@ -19,7 +19,7 @@ public class QuizRoom {
     private int maxParticipants;
     private int currentParticipants;
     private String password;
-    private int admission;
+    private int entryFee;
     private String roomType;
     private String status;
     private int currentQuestionNumber;

@@ -33,7 +33,7 @@ public class QuizController {
     }
 
     @PostMapping("/{roomId}")
-    public ResponseEntity<?> createRoom(@PathVariable int roomId) {
+    public ResponseEntity<?> admitRoom(@PathVariable int roomId) {
         quizService.addParticipantRoom(roomId);
         return ResponseEntity.ok().build();
     }
