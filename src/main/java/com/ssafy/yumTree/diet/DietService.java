@@ -17,8 +17,8 @@ public interface DietService {
 	/**
      * ChatGPT API 호출
      */
-    Map<String, Object> prompt(ChatCompletionDto chatCompletionDto);
 
+	Map<String, Object> promptWithMap(Map<String, Object> requestMap);
 	 Map<String, Object> analyzeFood(MultipartFile file) throws Exception;
 
 }

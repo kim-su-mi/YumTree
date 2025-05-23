@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.yumTree.config.ChatGPTConfig;
@@ -57,22 +56,19 @@ public class DietServiceImpl implements DietService{
 	private String promptUrl = "https://api.openai.com/v1/chat/completions";
 
 	// 고정 프롬프트 설정
-	private final String FIXED_PROMPT = "이 음식 사진을 분석해서 다음 정보를 JSON 형태로 제공해주세요:\n" +
-            "1. 음식 이름\n" +
-            "2. 예상 칼로리 (kcal)\n" +
-            "3. 주요 영양성분 (단백질, 탄수화물, 지방)\n" +
-            "4. 건강도 평가 (1-10점)\n" +
-            "5. 식단 개선 제안\n\n" +
-            "다음과 같은 JSON 형식으로 답변해주세요:\n" +
-            "{\n" +
-            "  \"foodName\": \"음식이름\",\n" +
-            "  \"calories\": 숫자,\n" +
-            "  \"protein\": \"단백질g\",\n" +
-            "  \"carbohydrate\": \"탄수화물g\",\n" +
-            "  \"fat\": \"지방g\",\n" +
-            "  \"healthScore\": 숫자,\n" +
-            "  \"suggestions\": \"개선제안\"\n" +
-            "}";
+	private final String FIXED_PROMPT = "이 음식 사진을 분석해서 다음 정보를 정확한 JSON 형태로 제공해주세요:\n" +
+	        "1. 각 음식의 이름 (한국어)\n" +
+	        "2. 각 음식의 예상 용량(g)\n\n" +
+	        "응답은 반드시 다음 JSON 형식만 사용해주세요:\n" +
+	        "{\n" +
+	        "  \"foods\": [\n" +
+	        "    {\n" +
+	        "      \"name\": \"음식이름\",\n" +
+	        "      \"weight\": 숫자\n" +
+	        "    }\n" +
+	        "  ]\n" +
+	        "}\n\n" +
+	        "다른 설명 없이 오직 JSON만 응답해주세요.";
 
 	@Override
 	public MonthlyDietSummaryResponseDto getMonthlySummary(String dateStr) {
@@ -130,37 +126,6 @@ public class DietServiceImpl implements DietService{
 	 *s3에 이미지 저장 
 	 */
 	@Override
-//	public String imageUpload(MultipartRequest request) throws IOException {
-//		// request에서 이미지 파일을 뽑아냄 
-//		MultipartFile file = request.getFile("upload");
-//
-//		// 뽑아낸 이미지 파일에서 이름 및 확장자 추출 
-//        String fileName = file.getOriginalFilename();
-//        String ext = fileName.substring(fileName.indexOf("."));
-//
-//        // 이미지 파일 이름 유일성을 위해 uuid적용 
-//        String uuidFileName = UUID.randomUUID() + ext;
-//        
-//        //서버환경에 저장할 경로 생성 
-//        String localPath = localLocation + uuidFileName;
-//
-//        //서버환경에 이미지 파일 저장 
-//        File localFile = new File(localPath);
-//        file.transferTo(localFile);
-//
-//
-//        // s3에 이미지 저장 
-//        s3Config.amazonS3Client().putObject(new PutObjectRequest(bucket, uuidFileName, localFile).withCannedAcl(CannedAccessControlList.PublicRead));
-//        // 이미지가 올라간 s3의 주소 
-//        String s3Url = s3Config.amazonS3Client().getUrl(bucket, uuidFileName).toString();
-//       System.out.println("s3  : "+s3Url);
-//        
-//        //서버에 저장한 이미지 삭제 
-//        localFile.delete();
-//
-//        return s3Url;
-//	}
-	
 	public String imageUpload(MultipartFile file) throws IOException {
         // 파일명 생성
         String originalFileName = file.getOriginalFilename();
@@ -180,49 +145,6 @@ public class DietServiceImpl implements DietService{
     }
 
 	
-
-	/**
-     * ChatGPT API 호출
-     */
-    @Override
-    public Map<String, Object> prompt(ChatCompletionDto chatCompletionDto) {
-        System.out.println("[+] ChatGPT API 호출을 시작합니다.");
-        
-        Map<String, Object> resultMap = new HashMap<>();
-        
-        try {
-            // [STEP1] 토큰 정보가 포함된 Header를 가져옵니다.
-            HttpHeaders headers = chatGPTConfig.httpHeaders();
-            
-            // [STEP2] HTTP 요청 엔티티 구성
-            HttpEntity<ChatCompletionDto> requestEntity = new HttpEntity<>(chatCompletionDto, headers);
-            
-            // [STEP3] RestTemplate을 사용해서 API 호출
-            ResponseEntity<String> response = chatGPTConfig
-                    .restTemplate()
-                    .exchange(promptUrl, HttpMethod.POST, requestEntity, String.class);
-            
-            System.out.println("ChatGPT API 응답 상태: " + response.getStatusCode());
-            System.out.println("ChatGPT API 응답 본문: " + response.getBody());
-            
-            // [STEP4] String -> HashMap 역직렬화
-            ObjectMapper om = new ObjectMapper();
-            resultMap = om.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
-            
-            System.out.println("[+] ChatGPT API 호출이 성공적으로 완료되었습니다.");
-            
-        } catch (JsonProcessingException e) {
-            System.err.println("JSON 파싱 오류: " + e.getMessage());
-            e.printStackTrace();
-            resultMap.put("error", "JSON 파싱 중 오류가 발생했습니다: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("ChatGPT API 호출 오류: " + e.getMessage());
-            e.printStackTrace();
-            resultMap.put("error", "API 호출 중 오류가 발생했습니다: " + e.getMessage());
-        }
-        
-        return resultMap;
-    }
     
     /**
      * ChatGPT API 호출 (Map 버전)
@@ -270,40 +192,68 @@ public class DietServiceImpl implements DietService{
         Map<String, Object> result = new HashMap<>();
         
         try {
-            System.out.println("[+] 음식 분석을 시작합니다.");
+        	 System.out.println("[+] 음식 분석을 시작합니다.");
+             
+             // 1. 이미지 업로드
+             String imageUrl = imageUpload(file);
+             System.out.println("이미지 업로드 완료: " + imageUrl);
+             
+             // 2. GPT 분석 요청
+             Map<String, Object> chatRequestMap = createChatRequestMap(imageUrl);
+             Map<String, Object> aiResponse = promptWithMap(chatRequestMap);
+             
+             if (aiResponse.containsKey("error")) {
+                 throw new RuntimeException("AI 분석 중 오류 발생: " + aiResponse.get("error"));
+             }
+             
+             // 3. GPT 응답에서 음식 정보 추출
+             String analysisText = extractAnalysisFromResponse(aiResponse);
+             System.out.println("GPT 분석 결과: " + analysisText);
+             
+             // 4. JSON 파싱해서 음식 목록 추출
+             List<AnalyzedFoodDto> analyzedFoods = parseGptResponse(analysisText);
+             System.out.println("4. JSON 파싱 : " + analyzedFoods);
+             
+             // 5. DB에서 영양정보 조회 및 계산
+             List<FoodNutritionInfoDto> nutritionInfos = getNutritionInfos(analyzedFoods);
+             System.out.println("5. DB에서 영양정보 조회 및 계 : " + nutritionInfos);
+             
+             // 6. 결과 구성
+             result.put("success", true);
+             result.put("imageUrl", imageUrl);
+             result.put("analyzedFoods", analyzedFoods);
+             result.put("nutritionInfos", nutritionInfos);
+             result.put("totalCalories", calculateTotalCalories(nutritionInfos));
+             
+             System.out.println("[+] 음식 분석이 성공적으로 완료되었습니다.");
+             return result;
+             
+         } catch (Exception e) {
+             System.err.println("음식 분석 중 오류 발생: " + e.getMessage());
+             e.printStackTrace();
+             throw e;
+         }
+     }
+    
+    /**
+     * GPT 응답을 파싱해서 음식 목록 추출
+     */
+    private List<AnalyzedFoodDto> parseGptResponse(String gptResponse) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
             
-            // 1. 이미지 업로드
-            String imageUrl = imageUpload(file);
-            System.out.println("이미지 업로드 완료: " + imageUrl);
+            // JSON에서 불필요한 부분 제거 (GPT가 추가 설명을 넣을 수 있음)
+            String cleanJson = extractJsonFromResponse(gptResponse);
             
-            // 2. ChatGPT 요청 구성 (Map 사용)
-            Map<String, Object> chatRequestMap = createChatRequestMap(imageUrl);
-            
-            // 3. AI 분석 요청 (Map 버전 사용)
-            Map<String, Object> aiResponse = promptWithMap(chatRequestMap);
-            
-            // 4. 오류 체크
-            if (aiResponse.containsKey("error")) {
-                throw new RuntimeException("AI 분석 중 오류 발생: " + aiResponse.get("error"));
-            }
-            
-            // 5. 결과 구성
-            result.put("imageUrl", imageUrl);
-            result.put("aiAnalysis", aiResponse);
-            
-            // AI 응답에서 실제 분석 결과 추출
-            String analysisText = extractAnalysisFromResponse(aiResponse);
-            if (analysisText != null) {
-                result.put("analysisText", analysisText);
-            }
-            
-            System.out.println("[+] 음식 분석이 성공적으로 완료되었습니다.");
-            return result;
+            FoodAnalysisResponseDto response = mapper.readValue(cleanJson, FoodAnalysisResponseDto.class);
+            return response.getFoods();
             
         } catch (Exception e) {
-            System.err.println("음식 분석 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
+            System.err.println("GPT 응답 파싱 오류: " + e.getMessage());
+            System.err.println("응답 내용: " + gptResponse);
+            
+            // 파싱 실패 시 빈 리스트 반환
+            return new ArrayList<>();
         }
     }
     
@@ -380,6 +330,92 @@ public class DietServiceImpl implements DietService{
         return null;
     }
 	
+    /**
+     * 응답에서 JSON 부분만 추출
+     */
+    private String extractJsonFromResponse(String response) {
+        if (response == null) return "{}";
+        
+        // JSON 시작과 끝 찾기
+        int startIndex = response.indexOf("{");
+        int lastIndex = response.lastIndexOf("}");
+        
+        if (startIndex != -1 && lastIndex != -1 && lastIndex > startIndex) {
+            return response.substring(startIndex, lastIndex + 1);
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 분석된 음식들의 영양정보를 DB에서 조회하고 중량에 맞게 계산
+     */
+    private List<FoodNutritionInfoDto> getNutritionInfos(List<AnalyzedFoodDto> analyzedFoods) {
+        List<FoodNutritionInfoDto> nutritionInfos = new ArrayList<>();
+        
+        for (AnalyzedFoodDto analyzedFood : analyzedFoods) {
+        	System.out.println("현재 음식 : " + analyzedFood);
+            // DB에서 음식 검색
+            List<FoodDto> foundFoods = dietDao.findFoodsByName(analyzedFood.getName());
+            
+            if (!foundFoods.isEmpty()) {
+                FoodDto food = foundFoods.get(0); // 가장 유사한 음식 선택
+                
+                // 중량 비율 계산 (GPT가 준 중량 / 100g)
+                // 예: GPT가 300g이라고 했으면 → 300 / 100 = 3.0배
+                double ratio = (double) analyzedFood.getWeight() / 100.0;
+                
+                FoodNutritionInfoDto nutritionInfo = new FoodNutritionInfoDto();
+                nutritionInfo.setFoodId(food.getFoodId());
+                nutritionInfo.setFoodName(food.getFoodName());
+                
+                // DB의 원본 값 (100g 기준)
+                nutritionInfo.setFoodKcal(food.getFoodKcal());
+                nutritionInfo.setFoodCarbs(food.getFoodCarbs());
+                nutritionInfo.setFoodProtein(food.getFoodProtein());
+                nutritionInfo.setFoodFat(food.getFoodFat());
+                nutritionInfo.setFoodSodium(food.getFoodSodium());
+                nutritionInfo.setFoodCholesterol(food.getFoodCholesterol());
+                nutritionInfo.setAnalyzedWeight(analyzedFood.getWeight());
+                
+                // GPT가 분석한 중량에 맞게 영양정보 계산 (100g 기준 × 비율)
+                nutritionInfo.setCalculatedKcal(Math.round(food.getFoodKcal() * ratio * 100.0) / 100.0);
+                nutritionInfo.setCalculatedCarbs(Math.round(food.getFoodCarbs() * ratio * 100.0) / 100.0);
+                nutritionInfo.setCalculatedProtein(Math.round(food.getFoodProtein() * ratio * 100.0) / 100.0);
+                nutritionInfo.setCalculatedFat(Math.round(food.getFoodFat() * ratio * 100.0) / 100.0);
+                nutritionInfo.setCalculatedSodium(Math.round(food.getFoodSodium() * ratio * 100.0) / 100.0);
+                nutritionInfo.setCalculatedCholesterol(Math.round(food.getFoodCholesterol() * ratio * 100.0) / 100.0);
+                
+                nutritionInfos.add(nutritionInfo);
+                
+                System.out.println("========== 영양정보 계산 결과 ==========");
+                System.out.println("음식명: " + analyzedFood.getName() + " → " + food.getFoodName());
+                System.out.println("GPT 분석 중량: " + analyzedFood.getWeight() + "g");
+                System.out.println("계산 비율: " + analyzedFood.getWeight() + "g ÷ 100g = " + ratio);
+                System.out.println("칼로리: " + food.getFoodKcal() + "kcal (100g) → " + nutritionInfo.getCalculatedKcal() + "kcal (" + analyzedFood.getWeight() + "g)");
+                System.out.println("단백질: " + food.getFoodProtein() + "g (100g) → " + nutritionInfo.getCalculatedProtein() + "g (" + analyzedFood.getWeight() + "g)");
+                System.out.println("탄수화물: " + food.getFoodCarbs() + "g (100g) → " + nutritionInfo.getCalculatedCarbs() + "g (" + analyzedFood.getWeight() + "g)");
+                System.out.println("지방: " + food.getFoodFat() + "g (100g) → " + nutritionInfo.getCalculatedFat() + "g (" + analyzedFood.getWeight() + "g)");
+                System.out.println("나트륨: " + food.getFoodSodium() + "mg (100g) → " + nutritionInfo.getCalculatedSodium() + "mg (" + analyzedFood.getWeight() + "g)");
+                System.out.println("콜레스테롤: " + food.getFoodCholesterol() + "mg (100g) → " + nutritionInfo.getCalculatedCholesterol() + "mg (" + analyzedFood.getWeight() + "g)");
+                System.out.println("=======================================");
+                
+            } else {
+                System.out.println("매칭 실패: " + analyzedFood.getName() + " - DB에서 찾을 수 없음");
+            }
+        }
+        
+        return nutritionInfos;
+    }
+    
+    /**
+     * 총 칼로리 계산
+     */
+    private double calculateTotalCalories(List<FoodNutritionInfoDto> nutritionInfos) {
+        return nutritionInfos.stream()
+                .mapToDouble(FoodNutritionInfoDto::getCalculatedKcal)
+                .sum();
+    }
 	
 
 }

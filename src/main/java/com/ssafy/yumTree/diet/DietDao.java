@@ -12,6 +12,16 @@ public interface DietDao {
 	int insertFood(FoodDto foodDto);
 
 	List<Map<String, Object>> getDietSummaryByMonth(Map<String, Object> map);
+	
+	 /**
+     * 음식 이름으로 검색 (LIKE 검색)
+     */
+    List<FoodDto> findFoodsByName(String foodName);
+    
+    /**
+     * 음식 ID로 단일 조회
+     */
+    FoodDto findFoodById(int foodId);
 
 	
 
