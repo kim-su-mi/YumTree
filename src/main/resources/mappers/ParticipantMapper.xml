@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.yumTree.quiz.dao.ParticipantsDao">
+
+    <!-- 방 ID로 참가자 전체 조회 -->
+    <select id="selectParticipantsByRoomId" parameterType="int" resultType="com.ssafy.yumTree.quiz.domain.Participant">
+        SELECT
+            participant_id AS participantId,
+            room_id AS roomId,
+            user_id AS userId,
+            score,
+            is_host AS isHost,
+            is_ready AS isReady,
+            created_at AS createdAt
+        FROM participants
+        WHERE room_id = #{roomId}
+    </select>
+
+    <!-- 참가자 정보 수정 -->
+    <update id="updateParticipant" parameterType="com.ssafy.yumTree.quiz.domain.Participant">
+        UPDATE participants
+        SET
+            score = #{score},
+            is_host = #{isHost},
+            is_ready = #{isReady}
+        WHERE participant_id = #{participantId}
+    </update>
+
+    <!-- 참가자 저장 -->
+    <insert id="save" parameterType="com.ssafy.yumTree.quiz.domain.Participant" useGeneratedKeys="true" keyProperty="participantId">
+        INSERT INTO participants (
+            room_id, user_id, score, is_host, is_ready, created_at
+        ) VALUES (
+                     #{roomId}, #{userId}, #{score}, #{isHost}, #{isReady}, #{createdAt}
+                 )
+    </insert>
+
+    <!-- 참가자 삭제 -->
+    <delete id="delete" parameterType="com.ssafy.yumTree.quiz.domain.Participant">
+        DELETE FROM participants
+        WHERE participant_id = #{participantId}
+    </delete>
+
+</mapper>

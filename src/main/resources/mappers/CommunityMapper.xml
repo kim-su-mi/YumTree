@@ -4,21 +4,21 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.yumTree.community.CommunityDao">
 
-    <insert id="insert" parameterType="CommunityDto">
+    <insert id="insert" parameterType="com.ssafy.yumTree.community.CommunityDto">
         INSERT INTO community (cm_title, cm_content, cm_user_number, cm_block_yn)
         VALUES (#{cmTitle}, #{cmContent}, #{cmUserNumber}, #{cmBlockYn})
     </insert>
 
-    <select id="getCommunity" parameterType="int" resultType="CommunityDto">
+    <select id="getCommunity" parameterType="int" resultType="com.ssafy.yumTree.community.CommunityDto">
         SELECT * FROM community
         WHERE cm_number = #{cn_number};
     </select>
 
-    <select id="getAllCommunity" resultType="CommunityDto">
+    <select id="getAllCommunity" resultType="com.ssafy.yumTree.community.CommunityDto">
         SELECT * FROM community;
     </select>
 
-    <update id="update" parameterType="CommunityDto">
+    <update id="update" parameterType="com.ssafy.yumTree.community.CommunityDto">
         UPDATE community
         SET
         cm_title = #{cmTitle},
