@@ -24,6 +24,7 @@ import com.ssafy.yumTree.jwt.LoginFilter;
 import com.ssafy.yumTree.user.RefreshDao;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -57,7 +58,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-		// cors설정 
+		// cors설정
 		http.cors((corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
 
 			@Override
@@ -68,13 +69,13 @@ public class SecurityConfig {
 				configuration.setAllowedOrigins(
 						Arrays.asList("http://localhost:3000", "http://localhost:5173")
 				); //프론트 엔드 서버 주
-				configuration.setAllowedMethods(Collections.singletonList("*")); //허용 메서드 
+				configuration.setAllowedMethods(Collections.singletonList("*")); //허용 메서드
 				configuration.setAllowCredentials(true);
-				configuration.setAllowedHeaders(Collections.singletonList("*"));
+				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+				configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "access"));
+				configuration.setExposedHeaders(Arrays.asList("Authorization", "access")); // 반환할 헤더
+				configuration.setAllowCredentials(true);
 				configuration.setMaxAge(3600L);
-
-				configuration.setExposedHeaders(Arrays.asList("Authorization", "access"));
-
 				return configuration;
 			}
 		})));
@@ -92,7 +93,7 @@ public class SecurityConfig {
 		http.authorizeHttpRequests((auth) -> auth
 				.requestMatchers("/login", "/", "/signup","/community").permitAll()
 				.requestMatchers("/admin").hasRole("ADMIN")
-				.requestMatchers("reissue").permitAll()
+				.requestMatchers("/reissue").permitAll()
 				.anyRequest().authenticated()
 //        		.anyRequest().permitAll() // 모든 요청 인증 없이 허용
 		);

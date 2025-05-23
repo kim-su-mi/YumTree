@@ -33,11 +33,13 @@ public class JWTFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		// 헤더에서 access키에 담긴 토큰을 꺼냄
+		System.out.println("JWTFilter");
+		System.out.println("-----------");
 		String accessToken = request.getHeader("access");
 
 		// 토큰이 없다면 다음 필터로 넘김
 		if (accessToken == null) {
-
+			System.out.println("Access token is null");
 			filterChain.doFilter(request, response);
 
 			return;
@@ -70,6 +72,8 @@ public class JWTFilter extends OncePerRequestFilter {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			return;
 		}
+
+		System.out.println("JWTFilter 검증 왆료");
 		// 여기까지 왔다면 토크 검증 완료 
 		// username, role 값을 획득
 		String userId = jwtUtil.getUseId(accessToken);
