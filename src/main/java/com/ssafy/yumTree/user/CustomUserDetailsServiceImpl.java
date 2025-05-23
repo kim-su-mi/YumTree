@@ -20,11 +20,10 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
 		UserDto user = signupDao.findByUserName(userId);
 		
 		//UserDetails에 담아서 return 하면 AuthenticationManager가 검증 
-		if(user != null) {
-			// 
-			return new CustomUserDetails(user);
+		if (user == null) {
+			throw new UsernameNotFoundException("해당 유저를 찾을 수 없습니다: " + userId);
 		}
-		return null;
-	}
 
+		return new CustomUserDetails(user);
+	}
 }
