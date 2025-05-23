@@ -23,6 +23,8 @@ public interface DietDao {
      */
     FoodDto findFoodById(int foodId);
 
+	List<FoodDto> selectFoodList(String search);
+
 	
 
 }

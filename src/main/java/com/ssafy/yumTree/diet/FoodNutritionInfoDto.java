@@ -9,6 +9,7 @@ public class FoodNutritionInfoDto {
 	    private double foodFat;
 	    private double foodSodium;
 	    private double foodCholesterol;
+	    private double foodWeight;
 	    private int analyzedWeight; // GPT가 분석한 용량
 	    private double calculatedKcal; // 용량에 맞게 계산된 칼로리
 	    private double calculatedCarbs;
@@ -20,11 +21,11 @@ public class FoodNutritionInfoDto {
 	    public FoodNutritionInfoDto() {
 			// TODO Auto-generated constructor stub
 		}
-	    
+
 		public FoodNutritionInfoDto(int foodId, String foodName, double foodKcal, double foodCarbs, double foodProtein,
-				double foodFat, double foodSodium, double foodCholesterol, int analyzedWeight, double calculatedKcal,
-				double calculatedCarbs, double calculatedProtein, double calculatedFat, double calculatedSodium,
-				double calculatedCholesterol) {
+				double foodFat, double foodSodium, double foodCholesterol, double foodWeight, int analyzedWeight,
+				double calculatedKcal, double calculatedCarbs, double calculatedProtein, double calculatedFat,
+				double calculatedSodium, double calculatedCholesterol) {
 			super();
 			this.foodId = foodId;
 			this.foodName = foodName;
@@ -34,6 +35,7 @@ public class FoodNutritionInfoDto {
 			this.foodFat = foodFat;
 			this.foodSodium = foodSodium;
 			this.foodCholesterol = foodCholesterol;
+			this.foodWeight = foodWeight;
 			this.analyzedWeight = analyzedWeight;
 			this.calculatedKcal = calculatedKcal;
 			this.calculatedCarbs = calculatedCarbs;
@@ -107,6 +109,14 @@ public class FoodNutritionInfoDto {
 			this.foodCholesterol = foodCholesterol;
 		}
 
+		public double getFoodWeight() {
+			return foodWeight;
+		}
+
+		public void setFoodWeight(double foodWeight) {
+			this.foodWeight = foodWeight;
+		}
+
 		public int getAnalyzedWeight() {
 			return analyzedWeight;
 		}
@@ -167,11 +177,11 @@ public class FoodNutritionInfoDto {
 		public String toString() {
 			return "FoodNutritionInfoDto [foodId=" + foodId + ", foodName=" + foodName + ", foodKcal=" + foodKcal
 					+ ", foodCarbs=" + foodCarbs + ", foodProtein=" + foodProtein + ", foodFat=" + foodFat
-					+ ", foodSodium=" + foodSodium + ", foodCholesterol=" + foodCholesterol + ", analyzedWeight="
-					+ analyzedWeight + ", calculatedKcal=" + calculatedKcal + ", calculatedCarbs=" + calculatedCarbs
-					+ ", calculatedProtein=" + calculatedProtein + ", calculatedFat=" + calculatedFat
-					+ ", calculatedSodium=" + calculatedSodium + ", calculatedCholesterol=" + calculatedCholesterol
-					+ "]";
+					+ ", foodSodium=" + foodSodium + ", foodCholesterol=" + foodCholesterol + ", foodWeight="
+					+ foodWeight + ", analyzedWeight=" + analyzedWeight + ", calculatedKcal=" + calculatedKcal
+					+ ", calculatedCarbs=" + calculatedCarbs + ", calculatedProtein=" + calculatedProtein
+					+ ", calculatedFat=" + calculatedFat + ", calculatedSodium=" + calculatedSodium
+					+ ", calculatedCholesterol=" + calculatedCholesterol + "]";
 		}
 	    
 		

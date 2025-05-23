@@ -3,42 +3,71 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ssafy.yumTree.diet.DietDao">
-<insert id="insertFood" parameterType="FoodDto">
-INSERT INTO food (food_name, food_kcal, food_carbs, food_protein, food_fat, food_sodium, food_cholesterol, food_weight)
-VALUES (#{foodName},#{foodKcal},#{foodCarbs},#{foodProtein},#{foodFat},#{foodSodium},#{foodCholesterol},#{foodWeight})
-</insert>
+	<insert id="insertFood" parameterType="FoodDto">
+		INSERT INTO food (food_name, food_kcal, food_carbs, food_protein, food_fat,food_sodium, food_cholesterol, food_weight)
+		VALUES
+		(#{foodName},#{foodKcal},#{foodCarbs},#{foodProtein},#{foodFat},#{foodSodium},#{foodCholesterol},#{foodWeight})
+	</insert>
 
-	<!-- 음식 이름으로 검색 (완전히 일치해야함)-->
-    <select id="findFoodsByName" parameterType="String" resultType="FoodDto">
-        SELECT
-        food_id,
-        food_name,
-        food_kcal,
-        food_carbs,
-        food_protein,
-        food_fat,
-        food_sodium,
-        food_cholesterol,
-        food_weight
-    FROM food
-    WHERE food_name = #{foodName}
-    LIMIT 1
-    </select>
-    
-    <!-- ID로 음식 조회 -->
-    <select id="findFoodById" parameterType="int" resultType="FoodDto">
-        SELECT 
-            food_id as foodId,
-            food_name as foodName,
-            food_kcal as foodKcal,
-            food_carbs as foodCarbs,
-            food_protein as foodProtein,
-            food_fat as foodFat,
-            food_sodium as foodSodium,
-            food_cholesterol as foodCholesterol,
-            food_weight as foodWeight
-        FROM food 
-        WHERE food_id = #{foodId}
-    </select>
+	<select id="selectFoodList" parameterType="String" resultType="FoodDto">
+		select * from food WHERE food_name LIKE CONCAT('%', #{foodName}, '%')
+		ORDER BY
+		CASE
+		    WHEN food_name = #{foodName} THEN 1           <!-- 완전히 일치하는 경우 (우선순위 1) -->
+		    WHEN food_name LIKE CONCAT(#{foodName}, '%') THEN 2 <!-- 시작 부분이 일치하는 경우 (우선순위 2) --> 
+		    WHEN food_name LIKE CONCAT('%', #{foodName}, '%') THEN 3  <!-- 중간에 포함되는 경우 (우선순위 3) --> 
+		    ELSE 4
+		END;
+	</select>
 
+
+	<select id="getDietSummaryByMonth" parameterType="Map" resultType="java.util.Map">
+	    SELECT
+	        DATE_FORMAT(dl.diet_log_date, '%Y-%m-%d') as diet_log_date,
+	        GROUP_CONCAT(DISTINCT dl.meal_type) as registered_meal_types
+	    FROM
+	        diet_log dl
+	    WHERE
+	        dl.user_number = 1<!--#{userNumber}-->
+	        AND dl.diet_log_date BETWEEN #{firstDayOfMonth} AND #{lastDayOfMonth}
+	    GROUP BY
+	        dl.diet_log_date
+	    ORDER BY
+	        dl.diet_log_date
+	</select>
+
+	<!-- 음식 이름으로 검색 (완전히 일치해야함) -->
+	<select id="findFoodsByName" parameterType="String" resultType="FoodDto">
+		SELECT
+			food_id,
+			food_name,
+			food_kcal,
+			food_carbs,
+			food_protein,
+			food_fat,
+			food_sodium,
+			food_cholesterol,
+			food_weight
+		FROM food
+		WHERE food_name = #{foodName}
+		LIMIT 1
+	</select>
+
+	<!-- ID로 음식 조회 -->
+<!--  <select id="findFoodById" parameterType="int"
+		resultType="FoodDto">
+		SELECT
+			food_id as foodId,
+			food_name as foodName,
+			food_kcal as foodKcal,
+			food_carbs as foodCarbs,
+			food_protein as foodProtein,
+			food_fat as foodFat,
+			food_sodium as foodSodium,
+			food_cholesterol as foodCholesterol,
+			food_weight as foodWeight
+		FROM food
+		WHERE food_id = #{foodId}
+	</select>
+	-->
 </mapper>

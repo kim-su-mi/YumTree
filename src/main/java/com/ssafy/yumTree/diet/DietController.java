@@ -1,6 +1,7 @@
 package com.ssafy.yumTree.diet;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartRequest;
 
 import com.ssafy.yumTree.jwt.UserUtil;
 
@@ -95,32 +95,6 @@ public class DietController {
      * @throws Exception
      */
 	@PostMapping("/analyze")
-//	public ResponseEntity<Map<String, Object>> analyzeFood(MultipartFile file) throws Exception {
-//	    Map<String, Object> responseData = new HashMap<>();
-//	    System.out.println("컨트롤러 진입!");
-//	    
-//	    try {
-//	        if (file == null || file.isEmpty()) {
-//	            responseData.put("success", false);
-//	            responseData.put("error", "파일이 없습니다.");
-//	            return ResponseEntity.badRequest().body(responseData);
-//	        }
-//
-//	        // 통합 분석 서비스 호출 (이미지 업로드 + AI 분석)
-//	        Map<String, Object> result = dietService.analyzeFood(file);
-//
-//	        responseData.put("success", true);
-//	        responseData.putAll(result);
-//
-//	        return ResponseEntity.ok(responseData);
-//
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	        responseData.put("success", false);
-//	        responseData.put("error", e.getMessage());
-//	        return ResponseEntity.status(500).body(responseData);
-//	    }
-//	}
 	public ResponseEntity<Map<String, Object>> analyzeFood(MultipartFile file) throws Exception {
 	    Map<String, Object> responseData = new HashMap<>();
 	    
@@ -144,4 +118,15 @@ public class DietController {
 	        return ResponseEntity.status(500).body(responseData);
 	    }
 	}
+	
+	/**
+	 * 식단 입력창에서 음식 조회
+	 */
+	@GetMapping("/food")
+	public ResponseEntity<List<FoodDto>> getSearchFood(String search){
+		List<FoodDto> foods = dietService.getSearchFood(search);
+		System.out.println(foods);
+		return ResponseEntity.ok().body(foods);
+	}
+	
 }
