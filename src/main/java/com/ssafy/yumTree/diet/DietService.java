@@ -21,4 +21,6 @@ public interface DietService {
 	Map<String, Object> promptWithMap(Map<String, Object> requestMap);
 	 Map<String, Object> analyzeFood(MultipartFile file) throws Exception;
 
+	List<FoodDto> getSearchFood(String search);
+
 }

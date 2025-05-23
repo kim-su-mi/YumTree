@@ -70,10 +70,19 @@ public class DietServiceImpl implements DietService{
 	        "}\n\n" +
 	        "다른 설명 없이 오직 JSON만 응답해주세요.";
 
+	
+	/**
+     * 음식 검색
+     */
+	@Override
+	public List<FoodDto> getSearchFood(String search) {
+		return dietDao.selectFoodList(search);
+	}
+	
 	@Override
 	public MonthlyDietSummaryResponseDto getMonthlySummary(String dateStr) {
 		// 현재 사용자 ID 가져오기
-        int userNumber = userUtil.getCurrentUserNumber();
+//        int userNumber = userUtil.getCurrentUserNumber();
         
         // 날짜 파싱
         LocalDate date = LocalDate.parse(dateStr);
@@ -81,7 +90,7 @@ public class DietServiceImpl implements DietService{
         LocalDate lastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
         
         Map<String, Object> map = new HashMap<>();
-        map.put("userNumber", userNumber);
+//        map.put("userNumber", userNumber);
         map.put("firstDayOfMonth", firstDayOfMonth);
         map.put("lastDayOfMonth", lastDayOfMonth);
         
@@ -221,9 +230,9 @@ public class DietServiceImpl implements DietService{
              // 6. 결과 구성
              result.put("success", true);
              result.put("imageUrl", imageUrl);
-             result.put("analyzedFoods", analyzedFoods);
+//             result.put("analyzedFoods", analyzedFoods);
              result.put("nutritionInfos", nutritionInfos);
-             result.put("totalCalories", calculateTotalCalories(nutritionInfos));
+//             result.put("totalCalories", calculateTotalCalories(nutritionInfos));
              
              System.out.println("[+] 음식 분석이 성공적으로 완료되었습니다.");
              return result;
@@ -376,6 +385,7 @@ public class DietServiceImpl implements DietService{
                 nutritionInfo.setFoodFat(food.getFoodFat());
                 nutritionInfo.setFoodSodium(food.getFoodSodium());
                 nutritionInfo.setFoodCholesterol(food.getFoodCholesterol());
+                nutritionInfo.setFoodWeight(food.getFoodWeight());
                 nutritionInfo.setAnalyzedWeight(analyzedFood.getWeight());
                 
                 // GPT가 분석한 중량에 맞게 영양정보 계산 (100g 기준 × 비율)
@@ -416,6 +426,8 @@ public class DietServiceImpl implements DietService{
                 .mapToDouble(FoodNutritionInfoDto::getCalculatedKcal)
                 .sum();
     }
+
+    
 	
 
 }
