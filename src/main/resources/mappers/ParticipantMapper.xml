@@ -31,11 +31,8 @@
 
     <!-- 참가자 저장 -->
     <insert id="save" parameterType="com.ssafy.yumTree.quiz.domain.Participant" useGeneratedKeys="true" keyProperty="participantId">
-        INSERT INTO participants (
-            room_id, user_id, score, is_host, is_ready, created_at
-        ) VALUES (
-                     #{roomId}, #{userId}, #{score}, #{isHost}, #{isReady}, #{createdAt}
-                 )
+        INSERT INTO participants (room_id, user_id, score, is_host, is_ready, created_at)
+        VALUES (#{roomId}, #{userId}, #{score}, #{isHost}, #{isReady}, #{createdAt})
     </insert>
 
     <!-- 참가자 삭제 -->

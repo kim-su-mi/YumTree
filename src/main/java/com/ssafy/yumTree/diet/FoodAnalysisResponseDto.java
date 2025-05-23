@@ -11,7 +11,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@NoArgsConstructor
+//@NoArgsConstructor
 public class FoodAnalysisResponseDto {
 	private List<AnalyzedFoodDto> foods;
 

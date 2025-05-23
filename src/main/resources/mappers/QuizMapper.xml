@@ -22,16 +22,16 @@
     </select>
 
     <select id="findById" resultMap="QuizRoomMap" parameterType="int">
-        SELECT * FROM game_room WHERE game_id = #{id}
+        SELECT * FROM game_room WHERE room_id = #{roomId}
     </select>
 
     <insert id="save" parameterType="com.ssafy.yumTree.quiz.domain.QuizRoom" useGeneratedKeys="true" keyProperty="roomId">
-        INSERT INTO game_room (title, host_id, max_participants, current_participants, room_type, status, current_question_number, created_at)
-        VALUES (#{title}, #{hostId}, #{maxParticipants}, #{currentParticipants}, #{roomType}, #{status}, #{currentQuestionNumber}, #{createdAt})
+        INSERT INTO game_room (title, host_id, max_participants, current_participants, room_type, status, current_question_number, created_at, entry_fee)
+        VALUES (#{title}, #{hostId}, #{maxParticipants}, #{currentParticipants}, #{roomType}, #{status}, #{currentQuestionNumber}, #{createdAt}, #{entryFee})
     </insert>
 
     <delete id="delete" parameterType="com.ssafy.yumTree.quiz.domain.QuizRoom">
-        DELETE FROM game_room WHERE game_id = #{id}
+        DELETE FROM game_room WHERE room_id = #{roomIid}
     </delete>
 
 </mapper>

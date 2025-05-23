@@ -39,14 +39,15 @@ public class QuizServiceImpl implements QuizService {
     }
 
     /**
-     * 방 생성, 유저 host 설정, 유저 participant 에 추가
+     * 방 생성, 유저 host 설정, 유저 participant에 추가
      * @param dto
      */
     @Override
     public void createRoom(CreateRoomDto dto) {
+
         QuizRoom room = QuizRoom.builder()
                 .title(dto.getTitle())
-                .admission(dto.getAdmission())
+                .entryFee(dto.getAdmission())
                 .maxParticipants(dto.getMaxParticipants())
                 .roomType(dto.getRoomType())
                 .password(dto.getPassword())
@@ -54,6 +55,7 @@ public class QuizServiceImpl implements QuizService {
                 .status("WAITING")
                 .currentParticipants(1)
                 .currentQuestionNumber(0)
+                .createdAt(LocalDateTime.now())
                 .build();
         quizRoomDao.save(room);
 
