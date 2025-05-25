@@ -60,7 +60,7 @@
     FROM diet_log dl
     JOIN diet_log_detail dld ON dl.diet_log_id = dld.diet_log_id
     JOIN food f ON dld.food_id = f.food_id
-    WHERE dl.user_number = 1<!--#{userNumber}-->
+    WHERE dl.user_number = #{userNumber}
     AND dl.diet_log_date = #{date}
     ORDER BY dl.meal_type, f.food_name
 </select>
@@ -112,7 +112,7 @@
     FROM diet_log dl
     JOIN diet_log_detail dld ON dl.diet_log_id = dld.diet_log_id
     JOIN food f ON dld.food_id = f.food_id
-    WHERE dl.user_number = 1<!--#{userNumber}-->
+    WHERE dl.user_number = #{userNumber}
     AND dl.diet_log_date = #{date}
     AND f.food_id = #{foodId}
     LIMIT 1
@@ -128,7 +128,7 @@
 		FROM
 		    diet_log dl
 		WHERE
-		    dl.user_number = 1<!--#{userNumber}-->
+		    dl.user_number = #{userNumber}
 		    AND dl.diet_log_date BETWEEN #{firstDayOfMonth} AND #{lastDayOfMonth}
 		GROUP BY
 		    dl.diet_log_date
