@@ -21,7 +21,7 @@
 	</select>
 
 	<select id="getDailyDietDetails" parameterType="Map" resultType="java.util.Map">
-    SELECT 
+    <!--SELECT 
         dl.meal_type,
         f.food_id,
         f.food_name,
@@ -32,12 +32,11 @@
         f.food_fat,
         f.food_carbs,
         f.food_weight,
-        <!-- 실제 섭취량 기준 영양성분 계산 -->
         CASE 
             WHEN dld.diet_unit = 'g' THEN (f.food_kcal * dld.diet_amount / f.food_weight)
             WHEN dld.diet_unit = '인분' THEN (f.food_kcal * dld.diet_amount)
-            WHEN dld.diet_unit = '조각' THEN (f.food_kcal * dld.diet_amount / 4) -- 조각은 1/4인분으로 가정
-            WHEN dld.diet_unit = '반찬그릇' THEN (f.food_kcal * dld.diet_amount / 2) -- 반찬그릇은 1/2인분으로 가정
+            WHEN dld.diet_unit = '조각' THEN (f.food_kcal * dld.diet_amount / 4)  조각은 1/4인분으로 가정
+            WHEN dld.diet_unit = '반찬그릇' THEN (f.food_kcal * dld.diet_amount / 2)  반찬그릇은 1/2인분으로 가정
         END as actual_calories,
         CASE 
             WHEN dld.diet_unit = 'g' THEN (f.food_protein * dld.diet_amount / f.food_weight)
@@ -62,7 +61,63 @@
     JOIN food f ON dld.food_id = f.food_id
     WHERE dl.user_number = #{userNumber}
     AND dl.diet_log_date = #{date}
-    ORDER BY dl.meal_type, f.food_name
+    ORDER BY dl.meal_type, f.food_name -->
+    SELECT
+    dl.meal_type,
+    f.food_id,
+    f.food_name,
+    dld.diet_amount,
+    dld.diet_unit,
+    f.food_kcal,
+    f.food_protein,
+    f.food_fat,
+    f.food_carbs,
+    f.food_sodium,
+    f.food_cholesterol,
+    f.food_weight,
+    -- 실제 섭취량 기준 영양성분 계산
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_kcal * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_kcal * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_kcal * dld.diet_amount / 4) -- 조각은 1/4인분으로 가정
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_kcal * dld.diet_amount / 2) -- 반찬그릇은 1/2인분으로 가정
+    END as actual_calories,
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_protein * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_protein * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_protein * dld.diet_amount / 4)
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_protein * dld.diet_amount / 2)
+    END as actual_protein,
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_fat * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_fat * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_fat * dld.diet_amount / 4)
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_fat * dld.diet_amount / 2)
+    END as actual_fat,
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_carbs * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_carbs * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_carbs * dld.diet_amount / 4)
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_carbs * dld.diet_amount / 2)
+    END as actual_carbs,
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_sodium * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_sodium * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_sodium * dld.diet_amount / 4)
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_sodium * dld.diet_amount / 2)
+    END as actual_sodium,
+    CASE
+        WHEN dld.diet_unit = 'g' THEN (f.food_cholesterol * dld.diet_amount / f.food_weight)
+        WHEN dld.diet_unit = '인분' THEN (f.food_cholesterol * dld.diet_amount)
+        WHEN dld.diet_unit = '조각' THEN (f.food_cholesterol * dld.diet_amount / 4)
+        WHEN dld.diet_unit = '반찬그릇' THEN (f.food_cholesterol * dld.diet_amount / 2)
+    END as actual_cholesterol
+FROM diet_log dl
+JOIN diet_log_detail dld ON dl.diet_log_id = dld.diet_log_id
+JOIN food f ON dld.food_id = f.food_id
+WHERE dl.user_number = #{userNumber}
+AND dl.diet_log_date = #{date}
+ORDER BY dl.meal_type, f.food_name
 </select>
 
 <select id="getFoodDetailByDate" parameterType="Map" resultType="java.util.Map">
