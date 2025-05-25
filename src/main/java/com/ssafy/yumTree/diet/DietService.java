@@ -23,4 +23,10 @@ public interface DietService {
 
 	List<FoodDto> getSearchFood(String search);
 
+	// 일일 식단 조회
+    DailyDietResponseDto getDailyDiet(String dateStr);
+    
+    // 특정 날짜의 특정 음식 상세 정보 조회
+    FoodDetailResponseDto getFoodDetailByDate(String dateStr, int foodId);
+
 }

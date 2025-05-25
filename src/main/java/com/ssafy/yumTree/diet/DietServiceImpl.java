@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -79,57 +80,205 @@ public class DietServiceImpl implements DietService{
 		return dietDao.selectFoodList(search);
 	}
 	
+	/**
+	 * 달력에 표시할 식단 정보 가져오기 
+	 */
 	@Override
 	public MonthlyDietSummaryResponseDto getMonthlySummary(String dateStr) {
+		
 		// 현재 사용자 ID 가져오기
-//        int userNumber = userUtil.getCurrentUserNumber();
-        
-        // 날짜 파싱
-        LocalDate date = LocalDate.parse(dateStr);
-        LocalDate firstDayOfMonth = date.withDayOfMonth(1);
-        LocalDate lastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
-        
-        Map<String, Object> map = new HashMap<>();
-//        map.put("userNumber", userNumber);
-        map.put("firstDayOfMonth", firstDayOfMonth);
-        map.put("lastDayOfMonth", lastDayOfMonth);
-        
-        // 월간 데이터 조회
-        List<Map<String, Object>> monthlyData = dietDao.getDietSummaryByMonth(map);
-        
-        // DTO로 변환
-        MonthlyDietSummaryResponseDto response = new MonthlyDietSummaryResponseDto();
-        response.setDate(dateStr);
-        
-        List<DailyDietSummaryDto> dailySummaries = new ArrayList<>();
-        
-        // 해당 월의 모든 날짜에 대해 정보 구성
-        for (int day = 1; day <= lastDayOfMonth.getDayOfMonth(); day++) {
-            LocalDate currentDate = date.withDayOfMonth(day);
-            String currentDateStr = currentDate.toString();
-            
-            DailyDietSummaryDto dailySummary = new DailyDietSummaryDto();
-            dailySummary.setDate(currentDateStr);
-            
-            // 등록된 식사 정보가 있으면 설정
-            for (Map<String, Object> data : monthlyData) {
-                String dbDate = (String) data.get("diet_log_date");
-                if (currentDateStr.equals(dbDate)) {
-                    String mealTypes = (String) data.get("registered_meal_types");
-                    dailySummary.setHasBreakfast(mealTypes.contains("아침"));
-                    dailySummary.setHasLunch(mealTypes.contains("점심"));
-                    dailySummary.setHasDinner(mealTypes.contains("저녁"));
-                    dailySummary.setHasSnack(mealTypes.contains("간식"));
-                    break;
-                }
-            }
-            
-            dailySummaries.add(dailySummary);
-        }
-        
-        response.setDailySummaries(dailySummaries);
-        return response;
+	    // int userNumber = userUtil.getCurrentUserNumber();
+		
+	    LocalDate date = LocalDate.parse(dateStr);
+	    LocalDate firstDayOfMonth = date.withDayOfMonth(1);
+	    LocalDate lastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
+	    
+	    Map<String, Object> map = new HashMap<>();
+	    // map.put("userNumber", userNumber);
+	    map.put("firstDayOfMonth", firstDayOfMonth);
+	    map.put("lastDayOfMonth", lastDayOfMonth);
+	    
+	    // DB에서 이미 boolean 형태로 가져옴
+	    List<Map<String, Object>> monthlyData = dietDao.getDietSummaryByMonth(map);
+	    
+	    // 간단한 변환
+	    Map<String, DailyDietSummaryDto> dietMap = monthlyData.stream()
+	    	    .collect(Collectors.toMap(
+	    	        data -> (String) data.get("date"),
+	    	        data -> new DailyDietSummaryDto(
+	    	            (String) data.get("date"),
+	    	            ((Number) data.get("hasBreakfast")).intValue() == 1,
+	    	            ((Number) data.get("hasLunch")).intValue() == 1,
+	    	            ((Number) data.get("hasDinner")).intValue() == 1,
+	    	            ((Number) data.get("hasSnack")).intValue() == 1
+	    	        )
+	    	    ));
+	    
+	    return new MonthlyDietSummaryResponseDto(dateStr, dietMap);
 	}
+	
+/**
+ * 식단 메인의 식단 정보 
+ */
+	@Override
+	public DailyDietResponseDto getDailyDiet(String dateStr) {
+	    try {
+	        // 현재 사용자 ID 가져오기
+//	        int userNumber = userUtil.getCurrentUserNumber();
+	        
+	        // 파라미터 설정
+	        Map<String, Object> params = new HashMap<>();
+//	        params.put("userNumber", userNumber);
+	        params.put("date", dateStr);
+	        
+	        // DB에서 해당 날짜의 식단 상세 정보 조회
+	        List<Map<String, Object>> dietDetails = dietDao.getDailyDietDetails(params);
+	        
+	        // 데이터가 없는 경우
+	        if (dietDetails.isEmpty()) {
+	            return new DailyDietResponseDto(true, 
+	                new DailyDietDataDto(dateStr, 
+	                    new NutritionDto(0, 0, 0, 0), 
+	                    new HashMap<>()));
+	        }
+	        
+	        // 식사별로 그룹화
+	        Map<String, List<Map<String, Object>>> mealGroups = dietDetails.stream()
+	            .collect(Collectors.groupingBy(data -> (String) data.get("meal_type")));
+	        
+	        // 일일 총 영양성분 계산
+	        double totalCalories = 0;
+	        double totalProtein = 0;
+	        double totalFat = 0;
+	        double totalCarbs = 0;
+	        
+	        // 식사별 데이터 구성
+	        Map<String, MealDto> meals = new HashMap<>();
+	        
+	        for (Map.Entry<String, List<Map<String, Object>>> entry : mealGroups.entrySet()) {
+	            String mealType = entry.getKey();
+	            List<Map<String, Object>> mealFoods = entry.getValue();
+	            
+	            // 해당 식사의 영양성분 합계 계산
+	            double mealCalories = 0;
+	            double mealProtein = 0;
+	            double mealFat = 0;
+	            double mealCarbs = 0;
+	            
+	            // 음식 리스트 구성
+	            List<FoodItemDto> foods = new ArrayList<>();
+	            
+	            for (Map<String, Object> foodData : mealFoods) {
+	                // 실제 섭취량 기준 영양성분 (DB에서 계산됨)
+	                double actualCalories = ((Number) foodData.get("actual_calories")).doubleValue();
+	                double actualProtein = ((Number) foodData.get("actual_protein")).doubleValue();
+	                double actualFat = ((Number) foodData.get("actual_fat")).doubleValue();
+	                double actualCarbs = ((Number) foodData.get("actual_carbs")).doubleValue();
+	                
+	                // 식사별 합계에 더하기
+	                mealCalories += actualCalories;
+	                mealProtein += actualProtein;
+	                mealFat += actualFat;
+	                mealCarbs += actualCarbs;
+	                
+	                // 음식 아이템 생성 (foodId, name, calories)
+	                FoodItemDto foodItem = new FoodItemDto(
+	                    ((Number) foodData.get("food_id")).intValue(),
+	                    (String) foodData.get("food_name"),
+	                    Math.round(actualCalories * 100.0) / 100.0 // 소수점 2자리 반올림
+	                );
+	                
+	                foods.add(foodItem);
+	            }
+	            
+	            // 일일 총합에 더하기
+	            totalCalories += mealCalories;
+	            totalProtein += mealProtein;
+	            totalFat += mealFat;
+	            totalCarbs += mealCarbs;
+	            
+	            // 식사 DTO 생성
+	            NutritionDto mealNutrition = new NutritionDto(
+	                Math.round(mealCalories * 100.0) / 100.0,
+	                Math.round(mealProtein * 100.0) / 100.0,
+	                Math.round(mealFat * 100.0) / 100.0,
+	                Math.round(mealCarbs * 100.0) / 100.0
+	            );
+	            
+	            meals.put(mealType, new MealDto(mealNutrition, foods));
+	        }
+	        
+	        // 일일 총 영양성분 DTO 생성
+	        NutritionDto dailyTotal = new NutritionDto(
+	            Math.round(totalCalories * 100.0) / 100.0,
+	            Math.round(totalProtein * 100.0) / 100.0,
+	            Math.round(totalFat * 100.0) / 100.0,
+	            Math.round(totalCarbs * 100.0) / 100.0
+	        );
+	        
+	        // 최종 응답 DTO 구성
+	        DailyDietDataDto data = new DailyDietDataDto(dateStr, dailyTotal, meals);
+	        return new DailyDietResponseDto(true, data);
+	        
+	    } catch (Exception e) {
+	        // 로그 출력
+	        e.printStackTrace();
+	        return new DailyDietResponseDto(false, null);
+	    }
+	}
+
+	@Override
+	public FoodDetailResponseDto getFoodDetailByDate(String dateStr, int foodId) {
+	    try {
+	        // 현재 사용자 ID 가져오기
+//	        int userNumber = userUtil.getCurrentUserNumber();
+	        
+	        // 파라미터 설정
+	        Map<String, Object> params = new HashMap<>();
+//	        params.put("userNumber", userNumber);
+	        params.put("date", dateStr);
+	        params.put("foodId", foodId);
+	        
+	        // DB에서 해당 음식의 상세 정보 조회
+	        Map<String, Object> foodDetailData = dietDao.getFoodDetailByDate(params);
+	        
+	        // 데이터가 없는 경우
+	        if (foodDetailData == null || foodDetailData.isEmpty()) {
+	            return new FoodDetailResponseDto(false, null);
+	        }
+	        
+	        // 실제 섭취량 기준 영양성분 계산 (이미 DB에서 계산됨)
+	        double actualCalories = ((Number) foodDetailData.get("actual_calories")).doubleValue();
+	        double actualProtein = ((Number) foodDetailData.get("actual_protein")).doubleValue();
+	        double actualFat = ((Number) foodDetailData.get("actual_fat")).doubleValue();
+	        double actualCarbs = ((Number) foodDetailData.get("actual_carbs")).doubleValue();
+	        double actualSodium = ((Number) foodDetailData.get("actual_sodium")).doubleValue();
+	        double actualCholesterol = ((Number) foodDetailData.get("actual_cholesterol")).doubleValue();
+	        
+	        // DTO 생성
+	        FoodDetailDto foodDetail = new FoodDetailDto(
+	            ((Number) foodDetailData.get("food_id")).intValue(),
+	            (String) foodDetailData.get("food_name"),
+	            ((Number) foodDetailData.get("diet_amount")).intValue(),
+	            (String) foodDetailData.get("diet_unit"),
+	            Math.round(actualCalories * 100.0) / 100.0,
+	            Math.round(actualProtein * 100.0) / 100.0,
+	            Math.round(actualFat * 100.0) / 100.0,
+	            Math.round(actualCarbs * 100.0) / 100.0,
+	            Math.round(actualSodium * 100.0) / 100.0,
+	            Math.round(actualCholesterol * 100.0) / 100.0,
+	            ((Number) foodDetailData.get("base_weight")).intValue()
+	        );
+	        
+	        return new FoodDetailResponseDto(true, foodDetail);
+	        
+	    } catch (Exception e) {
+	        // 로그 출력
+	        e.printStackTrace();
+	        return new FoodDetailResponseDto(false, null);
+	    }
+	}
+	
 
 	/**
 	 *s3에 이미지 저장 
