@@ -174,6 +174,8 @@ public class DietServiceImpl implements DietService{
 	                double actualProtein = ((Number) foodData.get("actual_protein")).doubleValue();
 	                double actualFat = ((Number) foodData.get("actual_fat")).doubleValue();
 	                double actualCarbs = ((Number) foodData.get("actual_carbs")).doubleValue();
+	                double actualSodium = ((Number) foodData.get("actual_sodium")).doubleValue();
+	                double actualCholesterol = ((Number) foodData.get("actual_cholesterol")).doubleValue();
 	                
 	                // 식사별 합계에 더하기
 	                mealCalories += actualCalories;
@@ -181,11 +183,19 @@ public class DietServiceImpl implements DietService{
 	                mealFat += actualFat;
 	                mealCarbs += actualCarbs;
 	                
-	                // 음식 아이템 생성 (foodId, name, calories)
+	                // 음식 아이템 생성 (추가 정보 포함)
 	                FoodItemDto foodItem = new FoodItemDto(
-	                    ((Number) foodData.get("food_id")).intValue(),
+	                    ((Number) foodData.get("food_id")).intValue(), // foodId 추가
 	                    (String) foodData.get("food_name"),
-	                    Math.round(actualCalories * 100.0) / 100.0 // 소수점 2자리 반올림
+	                    ((Number) foodData.get("diet_amount")).intValue(),
+	                    (String) foodData.get("diet_unit"),
+	                    Math.round(actualCalories * 100.0) / 100.0, // 소수점 2자리 반올림
+	                    Math.round(actualProtein * 100.0) / 100.0,
+	                    Math.round(actualFat * 100.0) / 100.0,
+	                    Math.round(actualCarbs * 100.0) / 100.0,
+	                    Math.round(actualSodium * 100.0) / 100.0, // 나트륨 추가
+	                    Math.round(actualCholesterol * 100.0) / 100.0, // 콜레스테롤 추가
+	                    ((Number) foodData.get("food_weight")).intValue() // 원래 1인분 중량 추가
 	                );
 	                
 	                foods.add(foodItem);
@@ -226,6 +236,111 @@ public class DietServiceImpl implements DietService{
 	        return new DailyDietResponseDto(false, null);
 	    }
 	}
+//	public DailyDietResponseDto getDailyDiet(String dateStr) {
+//	    try {
+//	        // 현재 사용자 ID 가져오기
+//	        int userNumber = userUtil.getCurrentUserNumber();
+//	        
+//	        // 파라미터 설정
+//	        Map<String, Object> params = new HashMap<>();
+//	        params.put("userNumber", userNumber);
+//	        params.put("date", dateStr);
+//	        
+//	        // DB에서 해당 날짜의 식단 상세 정보 조회
+//	        List<Map<String, Object>> dietDetails = dietDao.getDailyDietDetails(params);
+//	        
+//	        // 데이터가 없는 경우
+//	        if (dietDetails.isEmpty()) {
+//	            return new DailyDietResponseDto(true, 
+//	                new DailyDietDataDto(dateStr, 
+//	                    new NutritionDto(0, 0, 0, 0), 
+//	                    new HashMap<>()));
+//	        }
+//	        
+//	        // 식사별로 그룹화
+//	        Map<String, List<Map<String, Object>>> mealGroups = dietDetails.stream()
+//	            .collect(Collectors.groupingBy(data -> (String) data.get("meal_type")));
+//	        
+//	        // 일일 총 영양성분 계산
+//	        double totalCalories = 0;
+//	        double totalProtein = 0;
+//	        double totalFat = 0;
+//	        double totalCarbs = 0;
+//	        
+//	        // 식사별 데이터 구성
+//	        Map<String, MealDto> meals = new HashMap<>();
+//	        
+//	        for (Map.Entry<String, List<Map<String, Object>>> entry : mealGroups.entrySet()) {
+//	            String mealType = entry.getKey();
+//	            List<Map<String, Object>> mealFoods = entry.getValue();
+//	            
+//	            // 해당 식사의 영양성분 합계 계산
+//	            double mealCalories = 0;
+//	            double mealProtein = 0;
+//	            double mealFat = 0;
+//	            double mealCarbs = 0;
+//	            
+//	            // 음식 리스트 구성
+//	            List<FoodItemDto> foods = new ArrayList<>();
+//	            
+//	            for (Map<String, Object> foodData : mealFoods) {
+//	                // 실제 섭취량 기준 영양성분 (DB에서 계산됨)
+//	                double actualCalories = ((Number) foodData.get("actual_calories")).doubleValue();
+//	                double actualProtein = ((Number) foodData.get("actual_protein")).doubleValue();
+//	                double actualFat = ((Number) foodData.get("actual_fat")).doubleValue();
+//	                double actualCarbs = ((Number) foodData.get("actual_carbs")).doubleValue();
+//	                
+//	                // 식사별 합계에 더하기
+//	                mealCalories += actualCalories;
+//	                mealProtein += actualProtein;
+//	                mealFat += actualFat;
+//	                mealCarbs += actualCarbs;
+//	                
+//	                // 음식 아이템 생성 (foodId, name, calories)
+//	                FoodItemDto foodItem = new FoodItemDto(
+//	                    ((Number) foodData.get("food_id")).intValue(),
+//	                    (String) foodData.get("food_name"),
+//	                    Math.round(actualCalories * 100.0) / 100.0 // 소수점 2자리 반올림
+//	                );
+//	                
+//	                foods.add(foodItem);
+//	            }
+//	            
+//	            // 일일 총합에 더하기
+//	            totalCalories += mealCalories;
+//	            totalProtein += mealProtein;
+//	            totalFat += mealFat;
+//	            totalCarbs += mealCarbs;
+//	            
+//	            // 식사 DTO 생성
+//	            NutritionDto mealNutrition = new NutritionDto(
+//	                Math.round(mealCalories * 100.0) / 100.0,
+//	                Math.round(mealProtein * 100.0) / 100.0,
+//	                Math.round(mealFat * 100.0) / 100.0,
+//	                Math.round(mealCarbs * 100.0) / 100.0
+//	            );
+//	            
+//	            meals.put(mealType, new MealDto(mealNutrition, foods));
+//	        }
+//	        
+//	        // 일일 총 영양성분 DTO 생성
+//	        NutritionDto dailyTotal = new NutritionDto(
+//	            Math.round(totalCalories * 100.0) / 100.0,
+//	            Math.round(totalProtein * 100.0) / 100.0,
+//	            Math.round(totalFat * 100.0) / 100.0,
+//	            Math.round(totalCarbs * 100.0) / 100.0
+//	        );
+//	        
+//	        // 최종 응답 DTO 구성
+//	        DailyDietDataDto data = new DailyDietDataDto(dateStr, dailyTotal, meals);
+//	        return new DailyDietResponseDto(true, data);
+//	        
+//	    } catch (Exception e) {
+//	        // 로그 출력
+//	        e.printStackTrace();
+//	        return new DailyDietResponseDto(false, null);
+//	    }
+//	}
 
 	@Override
 	public FoodDetailResponseDto getFoodDetailByDate(String dateStr, int foodId) {

@@ -12,8 +12,16 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class FoodItemDto {
-	private int foodId;
-    private String name;
-    private double calories;
+	 private int foodId;
+	    private String foodName;
+	    private int dietAmount;
+	    private String dietUnit;
+	    private double actualCalories;
+	    private double actualProtein;
+	    private double actualFat;
+	    private double actualCarbs;
+	    private double actualSodium;
+	    private double actualCholesterol;
+	    private int foodWeight;
 
 }
