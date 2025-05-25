@@ -1,6 +1,5 @@
 package com.ssafy.yumTree.diet;
 
-import java.util.List;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
@@ -14,12 +13,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class MonthlyDietSummaryResponseDto {
+public class DailyDietDataDto {
 	 private String date;
-	 private Map<String, DailyDietSummaryDto> dietMap; // List 대신 Map 사용
-    
-    
-   
-    
+	    private NutritionDto dailyTotal;
+	    private Map<String, MealDto> meals;
 
 }

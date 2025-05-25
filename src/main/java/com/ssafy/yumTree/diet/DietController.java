@@ -1,11 +1,16 @@
 package com.ssafy.yumTree.diet;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,12 +54,62 @@ public class DietController {
 	 * @param date
 	 * @return
 	 */
-	@GetMapping("")
-	public ResponseEntity<MonthlyDietSummaryResponseDto> getMontlyDietLog(@RequestParam String date){
-//		return ResponseEntity.ok().body(dietService.getMontlyDietLog(date));
-		MonthlyDietSummaryResponseDto summary = dietService.getMonthlySummary(date);
+	@GetMapping("{date}")
+	public ResponseEntity<MonthlyDietSummaryResponseDto> getMontlyDietLog(@PathVariable String date) {
+        MonthlyDietSummaryResponseDto summary = dietService.getMonthlySummary(date);
         return ResponseEntity.ok(summary);
-	}
+    }
+	
+	/**
+     * 특정 날짜의 식단 상세 정보 조회
+     * @param date 날짜 (YYYY-MM-DD 형식)
+     * @return 해당 날짜의 식단 상세 정보
+     */
+    @GetMapping("/daily/{date}")
+    public ResponseEntity<DailyDietResponseDto> getDailyDiet(@PathVariable String date) {
+        try {
+            // 날짜 형식 검증
+            LocalDate.parse(date); // 잘못된 형식이면 예외 발생
+            
+            DailyDietResponseDto response = dietService.getDailyDiet(date);
+            return ResponseEntity.ok(response);
+            
+        } catch (DateTimeParseException e) {
+            // 잘못된 날짜 형식
+            return ResponseEntity.badRequest()
+                .body(new DailyDietResponseDto(false, null));
+        } catch (Exception e) {
+            // 기타 서버 오류
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new DailyDietResponseDto(false, null));
+        }
+    }
+    
+    /**
+     * 특정 날짜의 특정 음식 상세 정보 조회
+     * @param date 날짜 (YYYY-MM-DD 형식)
+     * @param foodId 음식 ID
+     * @return 해당 음식의 상세 영양성분 정보
+     */
+    @GetMapping("/daily/{date}/{foodId}")
+    public ResponseEntity<FoodDetailResponseDto> getFoodDetailByDate(
+            @PathVariable String date, 
+            @PathVariable int foodId) {
+        try {
+            // 날짜 형식 검증
+            LocalDate.parse(date);
+            
+            FoodDetailResponseDto response = dietService.getFoodDetailByDate(date, foodId);
+            return ResponseEntity.ok(response);
+            
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest()
+                .body(new FoodDetailResponseDto(false, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new FoodDetailResponseDto(false, null));
+        }
+    }
 	
 	/**
 	 *s3에 이미지 저장 
