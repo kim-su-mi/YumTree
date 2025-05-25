@@ -87,14 +87,14 @@ public class DietServiceImpl implements DietService{
 	public MonthlyDietSummaryResponseDto getMonthlySummary(String dateStr) {
 		
 		// 현재 사용자 ID 가져오기
-	    // int userNumber = userUtil.getCurrentUserNumber();
+	     int userNumber = userUtil.getCurrentUserNumber();
 		
 	    LocalDate date = LocalDate.parse(dateStr);
 	    LocalDate firstDayOfMonth = date.withDayOfMonth(1);
 	    LocalDate lastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
 	    
 	    Map<String, Object> map = new HashMap<>();
-	    // map.put("userNumber", userNumber);
+	     map.put("userNumber", userNumber);
 	    map.put("firstDayOfMonth", firstDayOfMonth);
 	    map.put("lastDayOfMonth", lastDayOfMonth);
 	    
@@ -124,11 +124,11 @@ public class DietServiceImpl implements DietService{
 	public DailyDietResponseDto getDailyDiet(String dateStr) {
 	    try {
 	        // 현재 사용자 ID 가져오기
-//	        int userNumber = userUtil.getCurrentUserNumber();
+	        int userNumber = userUtil.getCurrentUserNumber();
 	        
 	        // 파라미터 설정
 	        Map<String, Object> params = new HashMap<>();
-//	        params.put("userNumber", userNumber);
+	        params.put("userNumber", userNumber);
 	        params.put("date", dateStr);
 	        
 	        // DB에서 해당 날짜의 식단 상세 정보 조회
@@ -231,11 +231,11 @@ public class DietServiceImpl implements DietService{
 	public FoodDetailResponseDto getFoodDetailByDate(String dateStr, int foodId) {
 	    try {
 	        // 현재 사용자 ID 가져오기
-//	        int userNumber = userUtil.getCurrentUserNumber();
+	        int userNumber = userUtil.getCurrentUserNumber();
 	        
 	        // 파라미터 설정
 	        Map<String, Object> params = new HashMap<>();
-//	        params.put("userNumber", userNumber);
+	        params.put("userNumber", userNumber);
 	        params.put("date", dateStr);
 	        params.put("foodId", foodId);
 	        
