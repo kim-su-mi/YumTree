@@ -41,10 +41,10 @@ public class DietController {
 	 * @return
 	 */
 	@PostMapping("/food")
-	public ResponseEntity<Void> addFood(@RequestBody FoodDto foodDto){
+	public ResponseEntity<Integer> addFood(@RequestBody FoodDto foodDto){
 //		System.out.println("넘버 : "+userUtil.getCurrentUserNumber());
-		dietService.addFood(foodDto);
-		return ResponseEntity.ok().build();
+		int key = dietService.addFood(foodDto);
+		return ResponseEntity.ok().body(key);
 	}
 	
 	/**

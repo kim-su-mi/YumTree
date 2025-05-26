@@ -44,11 +44,6 @@ public class DietServiceImpl implements DietService{
 		this.chatGPTConfig = chatGPTConfig;
 	}
 
-	@Override
-	public int addFood(FoodDto foodDto) {
-		
-		return dietDao.insertFood(foodDto);
-	}
 	
 	@Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -73,6 +68,17 @@ public class DietServiceImpl implements DietService{
 	        "다른 설명 없이 오직 JSON만 응답해주세요.";
 
 	
+	@Override
+	public int addFood(FoodDto foodDto) {
+	    int result = dietDao.insertFood(foodDto);
+	    
+	    if (result > 0) {
+	        // 생성된 foodId 반환
+	        return foodDto.getFoodId();
+	    } else {
+	        return -1; // 실패 시
+	    }
+	}
 	/**
      * 음식 검색
      */
