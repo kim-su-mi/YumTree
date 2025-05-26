@@ -16,5 +16,6 @@ import lombok.ToString;
 public class MealDto {
 	private NutritionDto totalNutrition;
     private List<FoodItemDto> foods;
+    private String dietImage;
 
 }

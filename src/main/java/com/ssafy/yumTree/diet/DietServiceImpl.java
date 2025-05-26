@@ -302,6 +302,12 @@ public class DietServiceImpl implements DietService{
 	            double mealFat = 0;
 	            double mealCarbs = 0;
 	            
+	            // 식사 이미지 추출 (첫 번째 음식의 diet_image 사용)
+	            String dietImage = null;
+	            if (!mealFoods.isEmpty()) {
+	                dietImage = prefix + (String) mealFoods.get(0).get("diet_image");
+	            }
+	            
 	            // 음식 리스트 구성
 	            List<FoodItemDto> foods = new ArrayList<>();
 	            
@@ -344,7 +350,7 @@ public class DietServiceImpl implements DietService{
 	            totalFat += mealFat;
 	            totalCarbs += mealCarbs;
 	            
-	            // 식사 DTO 생성
+	            // 식사 DTO 생성 (dietImage 포함)
 	            NutritionDto mealNutrition = new NutritionDto(
 	                Math.round(mealCalories * 100.0) / 100.0,
 	                Math.round(mealProtein * 100.0) / 100.0,
@@ -352,7 +358,7 @@ public class DietServiceImpl implements DietService{
 	                Math.round(mealCarbs * 100.0) / 100.0
 	            );
 	            
-	            meals.put(mealType, new MealDto(mealNutrition, foods));
+	            meals.put(mealType, new MealDto(mealNutrition, foods, dietImage));
 	        }
 	        
 	        // 일일 총 영양성분 DTO 생성
