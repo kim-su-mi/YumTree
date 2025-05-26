@@ -47,6 +47,27 @@ public class DietController {
 		return ResponseEntity.ok().build();
 	}
 	
+	/**
+	 * 식단 저장 
+	 * @param requestDto
+	 * @return
+	 */
+	@PostMapping("")
+    public ResponseEntity<DietSaveResponseDto> saveDiet(@RequestBody DietSaveRequestDto requestDto) {
+        try {
+            DietSaveResponseDto response = dietService.saveDiet(requestDto);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new DietSaveResponseDto(false, "서버 오류가 발생했습니다."));
+        }
+    }
 
 	/**
 	 * 식단 페이지 로드 시 달력에 뿌려줄 현재 달에 해당하는 유저의 모든 식단 기록 조회 

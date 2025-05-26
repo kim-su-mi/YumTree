@@ -208,21 +208,56 @@ ORDER BY dl.meal_type, f.food_name
 		LIMIT 1
 	</select>
 
-	<!-- ID로 음식 조회 -->
-<!--  <select id="findFoodById" parameterType="int"
-		resultType="FoodDto">
-		SELECT
-			food_id as foodId,
-			food_name as foodName,
-			food_kcal as foodKcal,
-			food_carbs as foodCarbs,
-			food_protein as foodProtein,
-			food_fat as foodFat,
-			food_sodium as foodSodium,
-			food_cholesterol as foodCholesterol,
-			food_weight as foodWeight
-		FROM food
-		WHERE food_id = #{foodId}
-	</select>
-	-->
+	<!--식단 저장 -->
+	<!-- 기존 식단 로그 확인 -->
+    <select id="findExistingDietLog" parameterType="map" resultType="Integer">
+        SELECT diet_log_id
+        FROM diet_log
+        WHERE user_number = #{userNumber}
+        AND diet_log_date = #{dietLogDate}
+        AND meal_type = #{mealType}
+    </select>
+
+    <!-- 새 식단 로그 저장 -->
+    <insert id="insertDietLog" parameterType="map" useGeneratedKeys="true" keyProperty="dietLogId">
+        INSERT INTO diet_log (
+            user_number,
+            diet_log_date,
+            meal_type,
+            diet_image
+        ) VALUES (
+            #{userNumber},
+            #{dietLogDate},
+            #{mealType},
+            #{dietImage}
+        )
+    </insert>
+
+    <!-- 식단 상세 정보 저장 -->
+    <insert id="insertDietLogDetail" parameterType="map">
+        INSERT INTO diet_log_detail (
+            diet_log_id,
+            food_id,
+            diet_amount,
+            diet_unit
+        ) VALUES (
+            #{dietLogId},
+            #{foodId},
+            #{dietAmount},
+            #{dietUnit}
+        )
+    </insert>
+
+    <!-- 기존 상세 정보 삭제 -->
+    <delete id="deleteDietLogDetails" parameterType="int">
+        DELETE FROM diet_log_detail
+        WHERE diet_log_id = #{dietLogId}
+    </delete>
+
+    <!-- 식단 이미지 업데이트 -->
+    <update id="updateDietLogImage" parameterType="map">
+        UPDATE diet_log
+        SET diet_image = #{dietImage}
+        WHERE diet_log_id = #{dietLogId}
+    </update>
 </mapper>

@@ -29,6 +29,7 @@ public class ReissueController {
 	 */
 	@PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+		System.out.println("reissue들어");
         return reissueService.reissueToken(request, response);
     }
 
