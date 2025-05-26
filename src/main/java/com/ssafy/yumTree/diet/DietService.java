@@ -28,5 +28,8 @@ public interface DietService {
     
     // 특정 날짜의 특정 음식 상세 정보 조회
     FoodDetailResponseDto getFoodDetailByDate(String dateStr, int foodId);
+    
+    //식단 저장
+    DietSaveResponseDto saveDiet(DietSaveRequestDto requestDto);
 
 }

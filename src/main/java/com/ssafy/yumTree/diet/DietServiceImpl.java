@@ -1,6 +1,7 @@
 package com.ssafy.yumTree.diet;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +80,142 @@ public class DietServiceImpl implements DietService{
 	public List<FoodDto> getSearchFood(String search) {
 		return dietDao.selectFoodList(search);
 	}
+	
+	/**
+	 * 식단 저장 
+	 */
+	public DietSaveResponseDto saveDiet(DietSaveRequestDto requestDto) {
+        try {
+            // 입력값 검증
+            if (!validateRequest(requestDto)) {
+                return new DietSaveResponseDto(false, "잘못된 입력값입니다.");
+            }
+            
+            // 현재 사용자 번호 가져오기
+            int userNumber = userUtil.getCurrentUserNumber();
+            
+            // 같은 날짜, 같은 식사타입의 기존 데이터 확인
+            Map<String, Object> checkParams = new HashMap<>();
+            checkParams.put("userNumber", userNumber);
+            checkParams.put("dietLogDate", requestDto.getDietLogDate());
+            checkParams.put("mealType", requestDto.getMealType());
+            
+            Integer existingDietLogId = dietDao.findExistingDietLog(checkParams);
+            
+            if (existingDietLogId != null) {
+                // 기존 데이터가 있는 경우 업데이트
+                return updateExistingDiet(existingDietLogId, requestDto);
+            } else {
+                // 새로운 데이터 저장
+                return saveNewDiet(userNumber, requestDto);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("식단 저장 중 오류가 발생했습니다.", e);
+        }
+    }
+    
+    private boolean validateRequest(DietSaveRequestDto requestDto) {
+        if (requestDto.getDietLogDate() == null || requestDto.getDietLogDate().trim().isEmpty()) {
+            return false;
+        }
+        if (requestDto.getMealType() == null || requestDto.getMealType().trim().isEmpty()) {
+            return false;
+        }
+        if (requestDto.getDietDetails() == null || requestDto.getDietDetails().isEmpty()) {
+            return false;
+        }
+        
+        // 식사 타입 검증
+        List<String> validMealTypes = Arrays.asList("아침", "점심", "저녁", "간식");
+        if (!validMealTypes.contains(requestDto.getMealType())) {
+            return false;
+        }
+        
+        // 각 음식 상세 정보 검증
+        for (DietDetailDto detail : requestDto.getDietDetails()) {
+            if (detail.getFoodId() <= 0 || detail.getDietAmount() <= 0) {
+                return false;
+            }
+            if (detail.getDietUnit() == null || detail.getDietUnit().trim().isEmpty()) {
+                return false;
+            }
+            
+            // 단위 검증
+            List<String> validUnits = Arrays.asList("g", "인분", "조각", "반찬그릇");
+            if (!validUnits.contains(detail.getDietUnit())) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private DietSaveResponseDto saveNewDiet(int userNumber, DietSaveRequestDto requestDto) {
+        // diet_log 테이블에 메인 정보 저장
+        Map<String, Object> dietLogParams = new HashMap<>();
+        dietLogParams.put("userNumber", userNumber);
+        dietLogParams.put("dietLogDate", requestDto.getDietLogDate());
+        dietLogParams.put("mealType", requestDto.getMealType());
+        dietLogParams.put("dietImage", requestDto.getDietImage());
+        
+        int result = dietDao.insertDietLog(dietLogParams);
+        
+        // BigInteger를 Integer로 안전하게 변환
+        Object dietLogIdObj = dietLogParams.get("dietLogId");
+        int dietLogId = 0;
+        if (dietLogIdObj instanceof BigInteger) {
+            dietLogId = ((BigInteger) dietLogIdObj).intValue();
+        } else if (dietLogIdObj instanceof Integer) {
+            dietLogId = (Integer) dietLogIdObj;
+        } else if (dietLogIdObj instanceof Long) {
+            dietLogId = ((Long) dietLogIdObj).intValue();
+        }
+        
+        if (result > 0 && dietLogId > 0) {
+            // diet_log_detail 테이블에 상세 정보 저장
+            for (DietDetailDto detail : requestDto.getDietDetails()) {
+                Map<String, Object> detailParams = new HashMap<>();
+                detailParams.put("dietLogId", dietLogId);
+                detailParams.put("foodId", detail.getFoodId());
+                detailParams.put("dietAmount", detail.getDietAmount());
+                detailParams.put("dietUnit", detail.getDietUnit());
+                
+                dietDao.insertDietLogDetail(detailParams);
+            }
+            
+            return new DietSaveResponseDto(true, "식단이 성공적으로 저장되었습니다.", dietLogId);
+        } else {
+            return new DietSaveResponseDto(false, "식단 저장에 실패했습니다.");
+        }
+    }
+    
+    private DietSaveResponseDto updateExistingDiet(int dietLogId, DietSaveRequestDto requestDto) {
+        // 기존 상세 정보 삭제
+        dietDao.deleteDietLogDetails(dietLogId);
+        
+        // 메인 정보 업데이트 (이미지만 업데이트)
+        Map<String, Object> updateParams = new HashMap<>();
+        updateParams.put("dietLogId", dietLogId);
+        updateParams.put("dietImage", requestDto.getDietImage());
+        dietDao.updateDietLogImage(updateParams);
+        
+        // 새로운 상세 정보 저장
+        for (DietDetailDto detail : requestDto.getDietDetails()) {
+            Map<String, Object> detailParams = new HashMap<>();
+            detailParams.put("dietLogId", dietLogId);
+            detailParams.put("foodId", detail.getFoodId());
+            detailParams.put("dietAmount", detail.getDietAmount());
+            detailParams.put("dietUnit", detail.getDietUnit());
+            
+            dietDao.insertDietLogDetail(detailParams);
+        }
+        
+        return new DietSaveResponseDto(true, "식단이 성공적으로 업데이트되었습니다.", dietLogId);
+    }
+
+
 	
 	/**
 	 * 달력에 표시할 식단 정보 가져오기 
